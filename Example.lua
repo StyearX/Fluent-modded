@@ -1,260 +1,192 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/N/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/StyearX/Fluent-Modded/refs/heads/main/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/StyearX/Fluent-Modded/refs/heads/main/Addons/InterfaceManager.lua"))()
+local FloatingManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/StyearX/Fluent-Modded/refs/heads/main/Addons/SaveFloatingButtonManager.lua"))()
 
+-- Create Window: Main UI container
 local Window = Fluent:CreateWindow({
-    Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by dawid",
+    Title = "FluentModded",
+    SubTitle = "Vraigos",
     TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
+    Size = UDim2.fromOffset(520, 420),
     Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
     Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl -- Used when theres no MinimizeKeybind
+    MinimizeKey = Enum.KeyCode.LeftControl
 })
 
---Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
+-- Tabs: Different pages in the UI
+local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
+local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
 
-local Options = Fluent.Options
+-- Sections: Groups to organize elements inside tabs
+local BasicSection = MainTab:AddSection("Basic Controls")
+local AdvancedSection = MainTab:AddSection("Advanced")
+local InfoSection = MainTab:AddSection("Information")
 
-do
-    Fluent:Notify({
-        Title = "Notification",
-        Content = "This is a notification",
-        SubContent = "SubContent", -- Optional
-        Duration = 5 -- Set to nil to make the notification not disappear
-    })
+-- Toggle: On/off switch for enabling/disabling features
+local MyToggle = BasicSection:AddToggle("MyToggle", {
+    Title = "Toggle",
+    Description = "Enable/disable your feature",
+    Default = false -- set to true to enable by default
+})
+MyToggle:OnChanged(function(value)
+    print("[Toggle] State:", value)
+end)
 
+-- Slider: Adjust numeric values with a sliding bar
+local MySlider = BasicSection:AddSlider("MySlider", {
+    Title = "Slider",
+    Description = "Adjust a numeric value",
+    Default = 50, -- starting value
+    Min = 0, -- minimum value
+    Max = 100, -- maximum value
+    Rounding = 1 -- decimal places (0 = whole numbers, 1 = one decimal)
+})
+MySlider:OnChanged(function(value)
+    print("[Slider] Value:", value)
+end)
 
+-- Input: Text or number entry field
+local MyInput = BasicSection:AddInput("MyInput", {
+    Title = "Input",
+    Description = "Enter text or number",
+    Default = "Hello",
+    Placeholder = "Type here...",
+    Numeric = false, -- set to true to only allow numbers
+    Finished = false -- set to true to only fire callback when pressing Enter
+})
+MyInput:OnChanged(function(value)
+    print("[Input] Text:", value)
+end)
 
-    Tabs.Main:AddParagraph({
-        Title = "Paragraph",
-        Content = "This is a paragraph.\nSecond line!"
-    })
+-- Dropdown: Select from a list of options
+local MyDropdown = AdvancedSection:AddDropdown("MyDropdown", {
+    Title = "Dropdown",
+    Description = "Select one option",
+    Values = { "Option A", "Option B", "Option C" },
+    Default = "Option A",
+    Multi = false -- set to true so the dropdown can have more than 1 selection
+})
+MyDropdown:OnChanged(function(value)
+    print("[Dropdown] Selected:", value)
+end)
 
+-- Colorpicker: Pick colors with RGB/Hex picker
+local MyColorpicker = AdvancedSection:AddColorpicker("MyColorpicker", {
+    Title = "Colorpicker",
+    Description = "Pick a color",
+    Default = Color3.fromRGB(255, 0, 0), -- Red by default
+    Transparency = 0 -- 0 = no transparency, 1 = fully transparent
+})
+MyColorpicker:OnChanged(function(color)
+    print("[Colorpicker] RGB:", color.R, color.G, color.B)
+end)
 
+-- Keybind: Assign keyboard keys to toggle features
+local MyKeybind = AdvancedSection:AddKeybind("MyKeybind", {
+    Title = "Keybind",
+    Description = "Press a key to toggle something",
+    Default = "LeftAlt",
+    Mode = "Toggle" -- options: "Toggle", "Hold", "Always"
+})
+MyKeybind:OnClick(function(toggled)
+    print("[Keybind] Toggled:", toggled)
+end)
 
-    Tabs.Main:AddButton({
-        Title = "Button",
-        Description = "Very important button",
-        Callback = function()
-            Window:Dialog({
-                Title = "Title",
-                Content = "This is a dialog",
-                Buttons = {
-                    {
-                        Title = "Confirm",
-                        Callback = function()
-                            print("Confirmed the dialog.")
-                        end
-                    },
-                    {
-                        Title = "Cancel",
-                        Callback = function()
-                            print("Cancelled the dialog.")
-                        end
-                    }
-                }
-            })
-        end
-    })
+-- Button: Execute actions when clicked
+local MyButton = AdvancedSection:AddButton({
+    Title = "Button",
+    Description = "Click to execute action",
+    Callback = function()
+        Fluent:Notify({ Title = "Button", Content = "Action executed!", Duration = 3 }) -- duration in seconds
+    end
+})
 
+-- Paragraph: Display static text information
+InfoSection:AddParagraph({
+    Title = "Information",
+    Content = "Complete Fluent UI example with SaveManager.\nMinimize button works on mobile/PC."
+})
 
-
-    local Toggle = Tabs.Main:AddToggle("MyToggle", {Title = "Toggle", Default = false })
-
-    Toggle:OnChanged(function()
-        print("Toggle changed:", Options.MyToggle.Value)
-    end)
-
-    Options.MyToggle:SetValue(false)
-
-
-    
-    local Slider = Tabs.Main:AddSlider("Slider", {
-        Title = "Slider",
-        Description = "This is a slider",
-        Default = 2,
-        Min = 0,
-        Max = 5,
-        Rounding = 1,
-        Callback = function(Value)
-            print("Slider was changed:", Value)
-        end
-    })
-
-    Slider:OnChanged(function(Value)
-        print("Slider changed:", Value)
-    end)
-
-    Slider:SetValue(3)
-
-
-
-    local Dropdown = Tabs.Main:AddDropdown("Dropdown", {
-        Title = "Dropdown",
-        Values = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen"},
-        Multi = false,
-        Default = 1,
-    })
-
-    Dropdown:SetValue("four")
-
-    Dropdown:OnChanged(function(Value)
-        print("Dropdown changed:", Value)
-    end)
-
-
-    
-    local MultiDropdown = Tabs.Main:AddDropdown("MultiDropdown", {
-        Title = "Dropdown",
-        Description = "You can select multiple values.",
-        Values = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen"},
-        Multi = true,
-        Default = {"seven", "twelve"},
-    })
-
-    MultiDropdown:SetValue({
-        three = true,
-        five = true,
-        seven = false
-    })
-
-    MultiDropdown:OnChanged(function(Value)
-        local Values = {}
-        for Value, State in next, Value do
-            table.insert(Values, Value)
-        end
-        print("Mutlidropdown changed:", table.concat(Values, ", "))
-    end)
-
-
-
-    local Colorpicker = Tabs.Main:AddColorpicker("Colorpicker", {
-        Title = "Colorpicker",
-        Default = Color3.fromRGB(96, 205, 255)
-    })
-
-    Colorpicker:OnChanged(function()
-        print("Colorpicker changed:", Colorpicker.Value)
-    end)
-    
-    Colorpicker:SetValueRGB(Color3.fromRGB(0, 255, 140))
-
-
-
-    local TColorpicker = Tabs.Main:AddColorpicker("TransparencyColorpicker", {
-        Title = "Colorpicker",
-        Description = "but you can change the transparency.",
-        Transparency = 0,
-        Default = Color3.fromRGB(96, 205, 255)
-    })
-
-    TColorpicker:OnChanged(function()
-        print(
-            "TColorpicker changed:", TColorpicker.Value,
-            "Transparency:", TColorpicker.Transparency
-        )
-    end)
-
-
-
-    local Keybind = Tabs.Main:AddKeybind("Keybind", {
-        Title = "KeyBind",
-        Mode = "Toggle", -- Always, Toggle, Hold
-        Default = "LeftControl", -- String as the name of the keybind (MB1, MB2 for mouse buttons)
-
-        -- Occurs when the keybind is clicked, Value is `true`/`false`
-        Callback = function(Value)
-            print("Keybind clicked!", Value)
-        end,
-
-        -- Occurs when the keybind itself is changed, `New` is a KeyCode Enum OR a UserInputType Enum
-        ChangedCallback = function(New)
-            print("Keybind changed!", New)
-        end
-    })
-
-    -- OnClick is only fired when you press the keybind and the mode is Toggle
-    -- Otherwise, you will have to use Keybind:GetState()
-    Keybind:OnClick(function()
-        print("Keybind clicked:", Keybind:GetState())
-    end)
-
-    Keybind:OnChanged(function()
-        print("Keybind changed:", Keybind.Value)
-    end)
-
-    task.spawn(function()
-        while true do
-            wait(1)
-
-            -- example for checking if a keybind is being pressed
-            local state = Keybind:GetState()
-            if state then
-                print("Keybind is being held down")
-            end
-
-            if Fluent.Unloaded then break end
-        end
-    end)
-
-    Keybind:SetValue("MB2", "Toggle") -- Sets keybind to MB2, mode to Hold
-
-
-    local Input = Tabs.Main:AddInput("Input", {
-        Title = "Input",
-        Default = "Default",
-        Placeholder = "Placeholder",
-        Numeric = false, -- Only allows numbers
-        Finished = false, -- Only calls callback when you press enter
-        Callback = function(Value)
-            print("Input changed:", Value)
-        end
-    })
-
-    Input:OnChanged(function()
-        print("Input updated:", Input.Value)
-    end)
+-- Function to minimize/restore the main window
+local function SafeMinimize()
+    if Window and Window.Minimize then
+        Window:Minimize()
+    end
 end
 
+-- ScreenGui: Container for the floating button
+local OpenGui = Instance.new("ScreenGui")
+OpenGui.Name = "OpenUI"
+OpenGui.ResetOnSpawn = false -- keeps the GUI after player respawn
+OpenGui.Parent = game:GetService("CoreGui")
 
--- Addons:
--- SaveManager (Allows you to have a configuration system)
--- InterfaceManager (Allows you to have a interface managment system)
+-- Floating button: ImageButton to open/minimize the UI
+local OpenBtn = Instance.new("ImageButton")
+OpenBtn.Size = UDim2.fromOffset(55, 55)
+OpenBtn.Position = UDim2.new(0.02, 0, 0.85, 0) -- X = 2% from left, Y = 85% from top
+OpenBtn.BackgroundColor3 = Color3.fromRGB(105, 105, 105)
+OpenBtn.BackgroundTransparency = 0.5
+OpenBtn.Image = "rbxassetid://" -- put image ID between quotes to add an icon
+OpenBtn.Parent = OpenGui
 
--- Hand the library over to our managers
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
+-- UICorner: Makes the floating button rounded
+Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0.2, 0)
 
--- Ignore keys that are used by ThemeManager.
--- (we dont want configs to save themes, do we?)
-SaveManager:IgnoreThemeSettings()
+-- Drag functionality for floating button (supports mouse and touch)
+local dragActive, dragStart, startPos
+OpenBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragActive = true
+        dragStart = input.Position
+        startPos = OpenBtn.Position
+    end
+end)
+OpenBtn.InputChanged:Connect(function(input)
+    if dragActive and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        OpenBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+game:GetService("UserInputService").InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragActive = false
+    end
+end)
 
--- You can add indexes of elements the save manager should ignore
-SaveManager:SetIgnoreIndexes({})
+-- Click floating button to minimize/restore UI
+OpenBtn.MouseButton1Click:Connect(SafeMinimize)
 
--- use case for doing it this way:
--- a script hub could have themes in a global folder
--- and game configs in a separate folder per game
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-
-InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-SaveManager:BuildConfigSection(Tabs.Settings)
-
-
-Window:SelectTab(1)
-
-Fluent:Notify({
-    Title = "Fluent",
-    Content = "The script has been loaded.",
-    Duration = 8
+-- Button in Settings tab to minimize/restore
+SettingsTab:AddButton({
+    Title = "Minimize / Restore Window",
+    Description = "Tap to hide/show the main UI",
+    Callback = SafeMinimize
 })
 
--- You can use the SaveManager:LoadAutoloadConfig() to load a config
--- which has been marked to be one that auto loads!
+-- Setup SaveManager: For saving/loading configurations
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+FloatingManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings() -- don't save theme settings
+InterfaceManager:SetFolder("PlaceHolderHub")
+SaveManager:SetFolder("PlaceHolderHub/Config")
+FloatingManager:SetFolder("PlaceHolderHub")
+
+-- Build settings sections
+InterfaceManager:BuildInterfaceSection(SettingsTab)
+SaveManager:BuildConfigSection(SettingsTab)
+FloatingManager:BuildConfigSection(SettingsTab)
+
+-- Auto-load last saved config
 SaveManager:LoadAutoloadConfig()
+
+-- Notify user that UI is ready
+Fluent:Notify({
+    Title = "FluentModded",
+    Content = "UI loaded. Settings tab now has save manager.",
+    Duration = 5
+})
+
+-- Select the first tab (Main tab)
+Window:SelectTab(1)
