@@ -31,7 +31,6 @@ local a, b = {
                     {58, "ModuleScript", {"Neon"}},
                     {49, "ModuleScript", {"Aqua"}},
                     {48, "ModuleScript", {"Amethyst"}},
-                    -- 80 New Themes
                     {59, "ModuleScript", {"Ocean"}},
                     {60, "ModuleScript", {"Forest"}},
                     {61, "ModuleScript", {"Sunset"}},
