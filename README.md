@@ -5,7 +5,10 @@
 
 - Modern design
 - Many customization options
-- Almost any UI Element you would ever need 
+- Almost any UI Element you would ever need
+- 30+ Cool Themes
+- Work On any executor (i think)
+- Better Than RayField
 <br/>
 
 ## 🔌 Installation
