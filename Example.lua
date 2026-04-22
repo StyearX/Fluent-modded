@@ -6,11 +6,11 @@ local FloatingManager = loadstring(game:HttpGet("https://raw.githubusercontent.c
 -- Create Window: Main UI container
 local Window = Fluent:CreateWindow({
     Title = "FluentModded",
-    SubTitle = "Vraigos",
+    SubTitle = "test",
     TabWidth = 160,
     Size = UDim2.fromOffset(520, 420),
     Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
-    Theme = "Dark",
+    Theme = "Blood Red",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
