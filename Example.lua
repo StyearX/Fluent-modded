@@ -1,4 +1,4 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/N/main.lua"))()
+local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/test/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/StyearX/Fluent-Modded/refs/heads/main/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/StyearX/Fluent-Modded/refs/heads/main/Addons/InterfaceManager.lua"))()
 local FloatingManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/StyearX/Fluent-Modded/refs/heads/main/Addons/SaveFloatingButtonManager.lua"))()
