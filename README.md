@@ -9,6 +9,7 @@
 - 30+ Cool Themes
 - Work On any executor (i think)
 - Better Than RayField
+- animated window
 <br/>
 
 ## 🔌 Installation
