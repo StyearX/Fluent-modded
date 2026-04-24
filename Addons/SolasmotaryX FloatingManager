@@ -1,0 +1,271 @@
+-- FloatingButtonManager.lua
+local httpService = game:GetService("HttpService")
+
+local FloatingButtonManager = {}
+FloatingButtonManager.Folder = "SolasmotaryX/FloatingButtons"
+FloatingButtonManager.Buttons = {}
+FloatingButtonManager.Library = nil
+FloatingButtonManager.OnLoadCallback = nil
+
+local function serializeUDim2(u)
+    return { ScaleX = u.X.Scale, OffsetX = u.X.Offset, ScaleY = u.Y.Scale, OffsetY = u.Y.Offset }
+end
+
+local function deserializeUDim2(t)
+    return UDim2.new(t.ScaleX, t.OffsetX, t.ScaleY, t.OffsetY)
+end
+
+function FloatingButtonManager:BuildFolderTree()
+    local paths = { self.Folder, self.Folder .. "/settings" }
+    for _, p in ipairs(paths) do if not isfolder(p) then makefolder(p) end end
+end
+
+function FloatingButtonManager:SetLibrary(library)
+    self.Library = library
+end
+
+function FloatingButtonManager:SetFolder(folder)
+    self.Folder = folder
+    self:BuildFolderTree()
+end
+
+function FloatingButtonManager:SetOnLoadCallback(cb)
+    self.OnLoadCallback = cb
+end
+
+function FloatingButtonManager:AddButton(id, frame, locked, isCircle)
+    self.Buttons[id] = frame
+    frame:SetAttribute("Locked", locked or false)
+    frame:SetAttribute("IsCircle", isCircle or false)
+end
+
+function FloatingButtonManager:Save(name)
+    local path = self.Folder .. "/settings/" .. name .. ".json"
+    local data = {}
+    for id, frame in pairs(self.Buttons) do
+        data[id] = {
+            position = serializeUDim2(frame.Position),
+            locked = frame:GetAttribute("Locked") or false,
+            isCircle = frame:GetAttribute("IsCircle") or false
+        }
+    end
+    local ok, enc = pcall(httpService.JSONEncode, httpService, data)
+    if not ok then return false, "Encode failed" end
+    writefile(path, enc)
+    return true
+end
+
+function FloatingButtonManager:Load(name)
+    local path = self.Folder .. "/settings/" .. name .. ".json"
+    if not isfile(path) then return false, "File not found" end
+    local ok, dec = pcall(httpService.JSONDecode, httpService, readfile(path))
+    if not ok then return false, "Decode failed" end
+    for id, saved in pairs(dec) do
+        local frame = self.Buttons[id]
+        if frame then
+            frame.Position = deserializeUDim2(saved.position)
+            frame:SetAttribute("Locked", saved.locked or false)
+            frame:SetAttribute("IsCircle", saved.isCircle or false)
+            if self.OnLoadCallback then
+                self.OnLoadCallback(id, saved.locked)
+            end
+        end
+    end
+    return true
+end
+
+function FloatingButtonManager:Delete(name)
+    local path = self.Folder .. "/settings/" .. name .. ".json"
+    if isfile(path) then
+        delfile(path)
+        local autoPath = self.Folder .. "/settings/autoload.txt"
+        if isfile(autoPath) and readfile(autoPath) == name then delfile(autoPath) end
+        return true
+    end
+    return false
+end
+
+function FloatingButtonManager:RefreshList()
+    local files = listfiles(self.Folder .. "/settings")
+    local out = {}
+    for _, f in ipairs(files) do
+        if f:sub(-5) == ".json" then
+            local name = f:match("([^/\\]+)%.json$")
+            if name then table.insert(out, name) end
+        end
+    end
+    return out
+end
+
+function FloatingButtonManager:LoadAutoloadConfig()
+    local autoPath = self.Folder .. "/settings/autoload.txt"
+    if isfile(autoPath) then
+        local name = readfile(autoPath)
+        local suc, err = self:Load(name)
+        if suc then
+            self.Library:Notify({ Title = "Floating Buttons", Content = "Auto-loaded: " .. name, Duration = 3 })
+        end
+    end
+end
+
+function FloatingButtonManager:ShowDialog(title, content, callback)
+    local win = self.Library.Window
+    if win and win.Dialog then
+        win:Dialog({
+            Title = title,
+            Content = content,
+            Buttons = {
+                { Title = "Yes", Callback = callback },
+                { Title = "No" }
+            }
+        })
+    else
+        self.Library:Notify({ Title = title, Content = content .. " (no dialog)", Duration = 4 })
+        callback()
+    end
+end
+
+function FloatingButtonManager:BuildConfigSection(tab)
+    assert(self.Library, "FloatingButtonManager: Library not set")
+    local lib = self.Library
+    local section = tab:AddSection("Floating Button Layouts")
+
+    section:AddInput("FB_NewName", { Title = "New Layout Name" })
+
+    local listDD = section:AddDropdown("FB_ConfigList", {
+        Title = "Existing Layouts",
+        Values = self:RefreshList(),
+        AllowNull = true
+    })
+
+    -- Load
+    section:AddButton({
+        Title = "Load Selected",
+        Callback = function()
+            local name = listDD.Value
+            if not name then
+                lib:Notify({ Title = "Floating Buttons", Content = "No layout selected", Duration = 3 })
+                return
+            end
+            local suc, err = self:Load(name)
+            if suc then
+                lib:Notify({ Title = "Floating Buttons", Content = "Loaded: " .. name, Duration = 3 })
+            else
+                lib:Notify({ Title = "Error", Content = err, Duration = 4 })
+            end
+        end
+    })
+
+    -- Save as new
+    section:AddButton({
+        Title = "Save as New",
+        Callback = function()
+            local name = lib.Options.FB_NewName.Value
+            if name:gsub(" ", "") == "" then
+                lib:Notify({ Title = "Floating Buttons", Content = "Invalid name", Duration = 3 })
+                return
+            end
+            local path = self.Folder .. "/settings/" .. name .. ".json"
+            if isfile(path) then
+                self:ShowDialog("Overwrite?", "Layout '" .. name .. "' exists. Overwrite?", function()
+                    local suc, err = self:Save(name)
+                    if suc then
+                        lib:Notify({ Title = "Floating Buttons", Content = "Overwrote: " .. name, Duration = 3 })
+                        listDD:SetValues(self:RefreshList())
+                        listDD:SetValue(name)
+                    else
+                        lib:Notify({ Title = "Error", Content = err, Duration = 4 })
+                    end
+                end)
+            else
+                local suc, err = self:Save(name)
+                if suc then
+                    lib:Notify({ Title = "Floating Buttons", Content = "Saved as: " .. name, Duration = 3 })
+                    listDD:SetValues(self:RefreshList())
+                    listDD:SetValue(name)
+                else
+                    lib:Notify({ Title = "Error", Content = err, Duration = 4 })
+                end
+            end
+        end
+    })
+
+    -- Overwrite selected
+    section:AddButton({
+        Title = "Overwrite Selected",
+        Callback = function()
+            local name = listDD.Value
+            if not name then
+                lib:Notify({ Title = "Floating Buttons", Content = "No layout selected", Duration = 3 })
+                return
+            end
+            self:ShowDialog("Overwrite?", "Overwrite layout '" .. name .. "'?", function()
+                local suc, err = self:Save(name)
+                if suc then
+                    lib:Notify({ Title = "Floating Buttons", Content = "Overwrote: " .. name, Duration = 3 })
+                else
+                    lib:Notify({ Title = "Error", Content = err, Duration = 4 })
+                end
+            end)
+        end
+    })
+
+    -- Delete selected
+    section:AddButton({
+        Title = "Delete Selected",
+        Callback = function()
+            local name = listDD.Value
+            if not name then
+                lib:Notify({ Title = "Floating Buttons", Content = "No layout selected", Duration = 3 })
+                return
+            end
+            self:ShowDialog("Delete?", "Delete layout '" .. name .. "'?", function()
+                if self:Delete(name) then
+                    lib:Notify({ Title = "Floating Buttons", Content = "Deleted: " .. name, Duration = 3 })
+                    listDD:SetValues(self:RefreshList())
+                    listDD:SetValue(nil)
+                else
+                    lib:Notify({ Title = "Error", Content = "Delete failed", Duration = 3 })
+                end
+            end)
+        end
+    })
+
+    -- Refresh
+    section:AddButton({
+        Title = "Refresh List",
+        Callback = function()
+            listDD:SetValues(self:RefreshList())
+            listDD:SetValue(nil)
+        end
+    })
+
+    -- Autoload
+    local autoPath = self.Folder .. "/settings/autoload.txt"
+    local autoBtn
+    autoBtn = section:AddButton({
+        Title = "Set as Autoload",
+        Description = isfile(autoPath) and ("Auto: " .. readfile(autoPath)) or "None",
+        Callback = function()
+            local name = listDD.Value
+            if not name then
+                lib:Notify({ Title = "Floating Buttons", Content = "Select a layout first", Duration = 3 })
+                return
+            end
+            if isfile(autoPath) and readfile(autoPath) == name then
+                delfile(autoPath)
+                autoBtn:SetDesc("None")
+                lib:Notify({ Title = "Floating Buttons", Content = "Autoload disabled", Duration = 3 })
+            else
+                writefile(autoPath, name)
+                autoBtn:SetDesc("Auto: " .. name)
+                lib:Notify({ Title = "Floating Buttons", Content = "Autoload set to " .. name, Duration = 3 })
+            end
+        end
+    })
+
+    self:SetIgnoreIndexes({ "FB_NewName", "FB_ConfigList" })
+end
+
+FloatingButtonManager:BuildFolderTree()
+return FloatingButtonManager
