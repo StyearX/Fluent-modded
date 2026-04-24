@@ -1,0 +1,129 @@
+local httpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
+local InterfaceManager = {}
+InterfaceManager.Folder = "SolasmotaryX/Interface"
+InterfaceManager.Settings = {
+    Theme = "Amethyst",
+    Acrylic = true,
+    Transparency = true,
+    MenuKeybind = "LeftControl",
+    ShineEnabled = false   -- default animasi mati
+}
+InterfaceManager.Library = nil
+InterfaceManager.Animation = nil  -- akan di-set dari luar
+
+function InterfaceManager:SetFolder(folder)
+    self.Folder = folder
+    self:BuildFolderTree()
+end
+
+function InterfaceManager:SetLibrary(library)
+    self.Library = library
+end
+
+function InterfaceManager:SetAnimation(animationModule)
+    self.Animation = animationModule
+end
+
+function InterfaceManager:BuildFolderTree()
+    local paths = { self.Folder, self.Folder .. "/settings" }
+    for _, path in ipairs(paths) do
+        if not isfolder(path) then makefolder(path) end
+    end
+end
+
+function InterfaceManager:SaveSettings()
+    writefile(self.Folder .. "/options.json", httpService:JSONEncode(self.Settings))
+end
+
+function InterfaceManager:LoadSettings()
+    local path = self.Folder .. "/options.json"
+    if isfile(path) then
+        local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(path))
+        if success then
+            for k, v in pairs(decoded) do
+                self.Settings[k] = v
+            end
+        end
+    end
+end
+
+function InterfaceManager:ApplyShine()
+    if self.Animation and self.Settings.ShineEnabled then
+        self.Animation.Apply(self.Library.Theme, self.Library.Container)
+    else
+        self.Animation.ClearAllAnimations()
+    end
+end
+
+function InterfaceManager:BuildInterfaceSection(tab)
+    assert(self.Library, "Must set InterfaceManager.Library")
+    local Library = self.Library
+    self:LoadSettings()
+
+    local section = tab:AddSection("Interface Settings")
+
+    -- Theme dropdown
+    local themeDropdown = section:AddDropdown("InterfaceTheme", {
+        Title = "Theme",
+        Values = Library.Themes,
+        Default = self.Settings.Theme,
+        Callback = function(v)
+            Library:SetTheme(v)
+            self.Settings.Theme = v
+            self:SaveSettings()
+            self:ApplyShine()
+        end
+    })
+    themeDropdown:SetValue(self.Settings.Theme)
+
+    -- Acrylic (blur)
+    if Library.UseAcrylic then
+        section:AddToggle("AcrylicToggle", {
+            Title = "Acrylic (Blur)",
+            Default = self.Settings.Acrylic,
+            Callback = function(v)
+                Library:ToggleAcrylic(v)
+                self.Settings.Acrylic = v
+                self:SaveSettings()
+                self:ApplyShine()
+            end
+        })
+    end
+
+    -- Transparency
+    section:AddToggle("TransparentToggle", {
+        Title = "Transparency",
+        Default = self.Settings.Transparency,
+        Callback = function(v)
+            Library:ToggleTransparency(v)
+            self.Settings.Transparency = v
+            self:SaveSettings()
+        end
+    })
+
+    -- Shine (animated gradient) toggle
+    section:AddToggle("ShineToggle", {
+        Title = "Animated Shine (Gradient)",
+        Default = self.Settings.ShineEnabled,
+        Callback = function(v)
+            self.Settings.ShineEnabled = v
+            self:SaveSettings()
+            self:ApplyShine()
+        end
+    })
+
+    -- Minimize keybind
+    local keybind = section:AddKeybind("MenuKeybind", {
+        Title = "Minimize Bind",
+        Default = self.Settings.MenuKeybind
+    })
+    keybind:OnChanged(function()
+        self.Settings.MenuKeybind = keybind.Value
+        self:SaveSettings()
+    end)
+    Library.MinimizeKeybind = keybind
+end
+
+return InterfaceManager
