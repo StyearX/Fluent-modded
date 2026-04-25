@@ -1,52 +1,15 @@
 --[[                                                                                                                                                                                                                                                                                                  
-   &X:..........................................................................................:   
-   &X..:+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+:.:   
-   &X..+XXXXXX$$$$$$$$$$$$$$$X$$$X$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$X;.:   
-   &X..+XXXXXXXXX$X$$$$$$$$$$$X$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$X;..   
-   &X..+XXXXXXXXXXXX$XXX$$$$$Xxx+xX$$XX$$XXX$XX$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$X;.:   
-   &X..+XXXXXXXXXXXXXXXXXX$$XXX;:::+xXX$$XXX$XX$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$X;.:   
-   &X..+XXXXXXXXXXXXXXXXXXXXXXX;;;;;;+xXX$XXXXXXXXXXX$$$$$$$$$$$$$$$$$$$XX$$$$$$$X$$$$$$$$$$Xx;.:   
-   &X..+XXXXXXXXXXXXXXXXXXXXXXX+;;;;;;;+xXXXXXXXXXXXXXXXXXXXXX$$XXXXXXXXXX$XXXXX$$$$$$$$$XX+;;:.:   
-   &X..;XXXXXXXXXXXXXXXXXXXXXXXx++;::;;;;;xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX$$XXXXXX$$x+;;;++;.:   
-   &X..;XXXXXXXXXXXXXXXXXXXXXXXX++;::::;;;;;++xXXXXXxXxXX$XXXXX$XXXXXXXXXXXXXXX$$$$Xx;:;;;+++;;.:   
-   &X..;xXXXXXXXXXXXXXXXXXXXXXXXx;;;::::;;;;;;;++++;++++;;;;;;;;;+++;++++++xxxx++;;;;;;;;;++++;.:   
-   &X..;xXXXXXXXXXXXXXXXXXXXXXXXXx;;;;;;;;;;;;;;;;;;;++;:;;;;::;;++;;;++++;;;;;;;;++++;;;;;+++;.:   
-   &X..;xXXXXXXXXXXXXXXXXXXXXXXXXX+;;;;;;;;;;;;;;;;;;;;:;;++;::;;;;;;;;++++;;;;;xxxx+;;;;+++xx;.:   
-   &X..;xXXXXXXXXXXXXXXXXXXXXXXXXXx+:::::;;;;;;::;;;:;;;;+x+;;+;:;+;;::;;+++++;:;+xxx++++xxXXx;.:   
-   &X..;xXXXXXXXXXXXXXXXXXXXXXXXXXX+:;;;;:::;;;::;;:::;;+x+;;;;::;x+:::;;;;;+xx+;;;+xxxXXXXxx+;.:   
-   &X..;xXXXXXXXXXXXXXXXXXXXXXXXXXX+;;;;:::::::::;:::;;;;;;::;;;;;x+:::;;;;;;;+xx+++xXXXxxxXXx;.:   
-   &X..;xXXXXXXXXXXXXXXXXXXXXXXXXXXX+;;:::;++;;:;;;;;;::;:;;+xxxxxx+;:::;;;:;;;;+xxxX$$$Xxx$&$+.:   
-   &X..;xXXXXXXXXXXXXXXXXXXXXXXXXXx+::;;;;+xXX$x+;;;;:::::;+XXxxxx++++xxxxx++;;;;+xXX$$Xxx$&&&+.:   
-   &X..;xXXXXXXXXXXXXXXXXXXXXXXXX+;:;;;::::;;x$X$X;::::::;+xxx;+x$&&&&$$$$$$XXX+;;;xXX$$$&&&&&+.:   
-   &X..;xxxXXXXXxXXXXXxXXXXXXXXXx+:;;;;;;+;;:;;++x;:::::;;++x++X&&$XxXXXX+;;+++X$XxxXxxXX&&&&&+.:   
-   &X..;xxxxxxxxxxxxxXXxxXXxxxXxx;;;;;;;;+++++;::;+;;;;;;;;+xx$$Xxx+;;;;;;+xxXXxX$$XXXxxxX&&&&+.:   
-   &X..;xxxxxxxxxxxx+;+xXxxXxxXxx+;:::;;+++;;;;;;;;;;;;:;;xXXxxx+;::;;++xXXX$XXxxx$XXXXxxX&&&&+.:   
-   &X..;xxxxxxxxxx;:::::+xxxxxxx+;:::::;;++;;:::;;;;::;;;+X$$X++;;;;;++XXX$XXXxxxxX$XXXXxX$&&$+.:   
-   &X..;xxxxxxxx+:::;;+++xxxxxxxx;:::+xXx+;;::::::;+xx++xXX$Xx++xxxxxxXXXXxx++++++xX$XXXXXXX$$+.:   
-   &X..;xxxxxxxx;:;+xXXXXxxxxxxxx;::;+xx+;:::::::::;xXXX$&Xx+++xxXXXXxx++xxXX$$X+++xX$$XXXXxx+;.:   
-   &X..;xxxxxxx+;;+XXXXXXXxxx++++;:;xXXXx;:::::::...:x&$x;;;;+++xx+++++;;++++xX$Xx+++X$&$XXXXX;.:   
-   &X..;xxxx+;:::;;xX$$$XXxxx+xxxx;::;;;::::::::::;;+xXx+++++++xxxxx+;;;;;+++++xXXx++X$$XxXXXx;.:   
-   &x..;xx+;::::::;;x$$$Xxxxxxx++++;:;+xx+::;++++++xX&&&$x++++xxx++++;;;;;;;++++xxxX$$XXxXXXXx;.:   
-   &X..;+;::::::;+xxxxX$Xxxxx+++++++;;+;;;;;:;+x$$&&&&&&&&$XXx+++++++;;;;;;+xxxxxXX$$XxxxX$$Xx;.:   
-   &X..:::::;:;;xXXXxxX$Xxx++x++++x++;:;+xx+;:;+xXXXxXXXXXX$&&$$Xx++;;;;+++++xX$$$Xxx+xxX$$XXx;.:   
-   &X..::::::;+xXXXXXXXXXxx+++++xx+++++;++xxx+;:;+;;++xxx++++++++;;;;;;++xxXXXxxXXxx++xX$$$XXx;.:   
-   &x..:::::;+xX$XX$$$XXXXx++++xx+++++++;++xXXx+:::;;+++++;;;;;;;;;;+xxXXXXXXXXxx++xX$$$$XXXXx;.:   
-   &x..::::;+xXXX$$$$$XXXXxx++++++++++++++;++xxxx+;;;;++;;;;;;;;++xxXXXXXXXxxxx++xXX$$$$$XXXXx;.:   
-   &x..;;;+XXXX$&&&&$$XXXXXXx+++++++++++++++;;+xxxxxxx+++++++xxxxxxxxxxxxxxxxxXX$$$$$$$$$XXXXx;.:   
-   &X..;;:+X$$&&&&&&$$$$$XXXXx++++++++++++++;::;+xxxXXXxxXxxXXXXXXXXXXXXXX$$$$$$$$$$$XXXXXXxxx;.:   
-   &x..:::;xX$$$X$$$$$$$$XXXXXx++++++++++++;::::;+xxxxxXXxxxxxXXX$$$$$$$$$$$$$$$$$$$$XXXXxxxxx;.:   
-   &x..;;:;+XX$$$$$$$$$$$$$XXXXXx+++++++++;::::::;+xxxxxXXxxxXXX$$&$$$$&&$$$$$$$$$$$XXxxxxxxXx;.:   
-   &x..;;;;xXXXXXXXX$$$$$$XX$$$$$Xx;;;;;;;:::::::::;xxxXXxxxxXX$$$$$&&$$$XXX$$&&$$XXxxxxxXXXxx;.:   
-   &X..;;;;;+xXXXXXXXXXXXX$$$$&$XXXxx+;:::::::;;::::;xxxxxxxxXXX$$$$XXX$$$&&&&$XxxxxXXXXXXxxxx;.:   
-   &x..:;;;;;+xxXXxxxxXX$$$&&&$X$$XXXXx+;;;;;;;;:::::+xxxxxxXxX$&$X$$$$$&&$$XXxxxxXXXXXXxxxxxx;.:   
-   &X..;;;;;;;;+xxXXX$$$&&&&$$XX$$$X$$$Xxx+++++;;:::::;+xxxxxX$$XXX$XX$$$XXxxxXXXXXXXxxxxxxxxx;.:   
-   &x..;;;;;;;;;+xX$$$$XXXXXXXXX$$$$&&$XXXXXXXx++;::::::;;+xxX$XXXXxXX$$XXXXXXXXXXXxxxxxxxxxxx;.:   
-   &X..;+++++++++++xxxxxXXxxXXX$$X$&&&$$$$&$X$$Xx+;::::::::;xXXxxxxX$$$XXXXXXXXXXxxxxxxxxxxxxx;.:   
-   &X..;xXXxxxxxxx++xxxxxxxxxXX$XX&&$XXX$&&&$$&$Xx+:::::::::;+xXXXX$$XXXXXXXXXXxxxxxxxxxxxxxxx;.:   
-   &X..+X$XXXXXXXXxx++xxxxxxXXXXX$$$XXXX$&&$X$&&$Xx:::::::::::+xX$XXXXXXXXXXxxxxxxxxxxxxxxxxxx;.:   
-   &x..:;+++++++++;;;;++xxxxxxxxxxxxxxxxXXXXxxXXXx+;;;;;;;;;;;;+xxxxxxxxxxxxxxxxxxxxxxxxxxxx++:.:   
-   &x...........................................................................................:   
-                                                                                                    
+ _____ _                  _                         _     _          _ 
+|  ___| |_   _  ___ _ __ | |_   _ __ ___   ___   __| | __| | ___  __| |
+| |_  | | | | |/ _ \ '_ \| __| | '_ ` _ \ / _ \ / _` |/ _` |/ _ \/ _` |
+|  _| | | |_| |  __/ | | | |_  | | | | | | (_) | (_| | (_| |  __/ (_| |
+|_|   |_|\__,_|\___|_| |_|\__| |_| |_| |_|\___/ \__,_|\__,_|\___|\__,_|
+ ___       _             __                            _ _             
+|_ _|_ __ | |_ ___ _ __ / _| __ _  ___ ___   ___ _   _(_) |_ ___       
+ | || '_ \| __/ _ \ '__| |_ / _` |/ __/ _ \ / __| | | | | __/ _ \      
+ | || | | | ||  __/ |  |  _| (_| | (_|  __/ \__ \ |_| | | ||  __/      
+|___|_| |_|\__\___|_|  |_|  \__,_|\___\___| |___/\__,_|_|\__\___|      
+
     Fluent Interface Suite
     This script is not intended to be modified.
     To view the source code, see the 'src' folder on GitHub!
