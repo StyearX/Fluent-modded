@@ -3,9 +3,10 @@ local httpService = game:GetService("HttpService")
 local InterfaceManager = {} do
 	InterfaceManager.Folder = "FluentSettings"
     InterfaceManager.Settings = {
-        Theme = "Dark",
+        Theme = "Azure",
         Acrylic = true,
         Transparency = true,
+		Animated = true,
         MenuKeybind = "LeftControl"
     }
 
@@ -99,6 +100,15 @@ local InterfaceManager = {} do
 				Library:ToggleTransparency(Value)
 				Settings.Transparency = Value
                 InterfaceManager:SaveSettings()
+			end
+		})
+
+		section:AddToggle("AnimationToggle", {
+			Title = "Animated Theme",
+			Description = "Makes the theme animated.",
+			Default = Settings.Animated,
+			Callback = function(Value)
+				getgenv().ShineEnabled = Value
 			end
 		})
 	
