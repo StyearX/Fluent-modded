@@ -10,6 +10,10 @@
 - Work On any executor (i think)
 - Better Than RayField
 - animated window
+- Search system For tabs and Drop-down (can be disabled)
+- SaveManager, Interface Manager, Save floating manager are already in fluent, you just need to add the setup
+- open source
+- mobile support with openUi/minimazer
 <br/>
 
 ## 🔌 Installation
@@ -17,7 +21,7 @@
 You can load Fluent through a GitHub Release:
 
 ```lua
-local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/N/main.lua"))()
+local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/N/Fluent.lua"))()
 ```
 <br/>
 
