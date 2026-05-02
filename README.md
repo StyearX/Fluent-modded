@@ -33,7 +33,7 @@
 
 ```lua
 local Fluent = loadstring(game:HttpGet(
-    "https://github.com/StyearX/Fluent-Modded/releases/download/Fluent Beta/Fluent.lua"
+    "https://github.com/StyearX/Fluent-Modded/releases/download/FluentBeta/Fluent.lua"
 ))()
 ```
 
