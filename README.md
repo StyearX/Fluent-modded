@@ -5,8 +5,6 @@
 
 **Fluent Modded** is a modified version of the [Fluent UI Library](https://github.com/dawid-scripts/Fluent), rebuilt and extended with modern features, more themes, icon support, manager systems, and mobile compatibility.
 
-> This script is just a Lua example — you can use this UI library for your own scripts.
-
 **GitHub:** https://github.com/StyearX/Fluent-modded
 
 ---
