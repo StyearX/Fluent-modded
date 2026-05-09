@@ -14,7 +14,7 @@ A modified version of the [Fluent](https://github.com/dawid-scripts/Fluent) UI l
 
 ```lua
 local Fluent = loadstring(game:HttpGet(
-    "https://github.com/StyearX/Fluent-Modded/releases/download/FluentBeta/FluentLiteTest"
+    "https://github.com/StyearX/Fluent-Modded/releases/download/Fluent/FluentLite"
 ))()
 
 local Window = Fluent:CreateWindow({
