@@ -107,7 +107,7 @@ local function fetchBatch(texts, from, to, callback)
 			done = done + 1
 			if done >= total then callback(results) end
 		end)
-		task.wait(0.05)
+		task.wait(0)
 	end
 end
 
