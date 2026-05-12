@@ -4,9 +4,8 @@ TranslationManager.Language = "en"
 TranslationManager.Source = "en"
 TranslationManager.Cache = {}
 TranslationManager.Pending = {}
-TranslationManager.Registered = {}
 TranslationManager.Library = nil
-TranslationManager.Options = nil
+TranslationManager.Bindings = {}
 
 TranslationManager.Languages = {
 	{code="af",name="Afrikaans"},{code="sq",name="Albanian"},{code="am",name="Amharic"},
@@ -58,13 +57,9 @@ local function urlEncode(s)
 	return s
 end
 
-local function cacheKey(text, from, to)
-	return from..":"..to..":"..text
-end
-
-local function fetchTranslation(text, from, to, callback)
-	if from == to or not text or text == "" then callback(text) return end
-	local k = cacheKey(text, from, to)
+local function fetch(text, from, to, callback)
+	if not text or text == "" or from == to then callback(text) return end
+	local k = from..":"..to..":"..text
 	if TranslationManager.Cache[k] then callback(TranslationManager.Cache[k]) return end
 	if TranslationManager.Pending[k] then
 		table.insert(TranslationManager.Pending[k], callback)
@@ -92,18 +87,65 @@ local function fetchTranslation(text, from, to, callback)
 	end)
 end
 
-local function scanAndReplace(root, original, translated)
-	if not root or not root:IsA("Instance") then return end
-	for _, d in ipairs(root:GetDescendants()) do
-		if (d:IsA("TextLabel") or d:IsA("TextButton")) and d.Text == original then
-			d.Text = translated
-		end
+local function fetchBatch(texts, from, to, callback)
+	if from == to then
+		local r = {}
+		for _, t in ipairs(texts) do r[t] = t end
+		callback(r)
+		return
+	end
+	local unique, seen, results = {}, {}, {}
+	for _, t in ipairs(texts) do
+		if not seen[t] then seen[t] = true; table.insert(unique, t) end
+	end
+	local total = #unique
+	if total == 0 then callback(results) return end
+	local done = 0
+	for _, text in ipairs(unique) do
+		fetch(text, from, to, function(translated)
+			results[text] = translated
+			done = done + 1
+			if done >= total then callback(results) end
+		end)
+		task.wait(0.05)
 	end
 end
 
+-- add a setter function bound to an original text string
+local function addBinding(origText, setter)
+	if not origText or origText == "" then return end
+	if not TranslationManager.Bindings[origText] then
+		TranslationManager.Bindings[origText] = {}
+	end
+	table.insert(TranslationManager.Bindings[origText], setter)
+	if TranslationManager.Language ~= TranslationManager.Source then
+		fetch(origText, TranslationManager.Source, TranslationManager.Language, setter)
+	end
+end
+
+-- find a specific TextLabel whose text == original inside a frame
+local function findLabel(root, original)
+	if not root or not root:IsA("Instance") then return nil end
+	for _, d in ipairs(root:GetDescendants()) do
+		if (d:IsA("TextLabel") or d:IsA("TextButton")) and d.Text == original then
+			return d
+		end
+	end
+	return nil
+end
+
+-- bind a direct TextLabel reference — re-translate always works regardless of current text
+local function bindLabel(label, origText)
+	if not label then return end
+	addBinding(origText, function(t)
+		pcall(function() label.Text = t end)
+	end)
+end
+
+-- ─── public ──────────────────────────────────────────────────────────────────
+
 function TranslationManager:SetLibrary(lib)
 	self.Library = lib
-	self.Options = lib.Options
 end
 
 function TranslationManager:SetFolder(folder)
@@ -145,57 +187,91 @@ function TranslationManager:GetNameFromCode(code)
 	return "English"
 end
 
-function TranslationManager:Register(text, callback)
-	if not text or text == "" then return end
-	if not self.Registered[text] then self.Registered[text] = {} end
-	table.insert(self.Registered[text], callback)
-	fetchTranslation(text, self.Source, self.Language, callback)
-end
-
+-- batch all registered texts and apply to all stored setters
 function TranslationManager:SetLanguage(code)
 	self.Language = code
 	self:SaveSettings()
-	for origText, callbacks in pairs(self.Registered) do
-		local cbs = callbacks
-		fetchTranslation(origText, self.Source, code, function(translated)
-			for _, cb in ipairs(cbs) do task.spawn(cb, translated) end
-		end)
-	end
+	local texts = {}
+	for origText in pairs(self.Bindings) do table.insert(texts, origText) end
+	fetchBatch(texts, self.Source, code, function(results)
+		for origText, setters in pairs(self.Bindings) do
+			local translated = results[origText] or origText
+			for _, setter in ipairs(setters) do
+				task.spawn(setter, translated)
+			end
+		end
+	end)
 end
 
-function TranslationManager:TranslateElement(el, origTitle, origDesc)
+-- bind element's Title and Description via SetTitle/SetDesc + direct label ref
+function TranslationManager:BindElement(el, origTitle, origDesc)
 	if not el then return end
 	if origTitle and origTitle ~= "" then
-		self:Register(origTitle, function(t)
-			pcall(function() el:SetTitle(t) end)
-			if self.Library and self.Library.GUI then
-				pcall(scanAndReplace, self.Library.GUI, origTitle, t)
+		if type(el.SetTitle) == "function" then
+			addBinding(origTitle, function(t) pcall(function() el:SetTitle(t) end) end)
+		end
+		task.defer(function()
+			local frame = rawget(el, "Frame") or el
+			if typeof(frame) == "Instance" then
+				local label = findLabel(frame, origTitle)
+				if label then bindLabel(label, origTitle) end
 			end
 		end)
 	end
 	if origDesc and origDesc ~= "" then
-		self:Register(origDesc, function(t)
-			pcall(function() el:SetDesc(t) end)
-			if self.Library and self.Library.GUI then
-				pcall(scanAndReplace, self.Library.GUI, origDesc, t)
+		if type(el.SetDesc) == "function" then
+			addBinding(origDesc, function(t) pcall(function() el:SetDesc(t) end) end)
+		end
+		task.defer(function()
+			local frame = rawget(el, "Frame") or el
+			if typeof(frame) == "Instance" then
+				local label = findLabel(frame, origDesc)
+				if label then bindLabel(label, origDesc) end
 			end
 		end)
 	end
 end
 
+-- bind section header TextLabel directly
+function TranslationManager:BindSection(section, origTitle)
+	if not origTitle or origTitle == "" or not section then return end
+	task.defer(function()
+		local frame = rawget(section, "Frame") or section
+		local label = typeof(frame) == "Instance" and findLabel(frame, origTitle)
+		if not label and self.Library and self.Library.GUI then
+			label = findLabel(self.Library.GUI, origTitle)
+		end
+		if label then bindLabel(label, origTitle) end
+	end)
+end
+
+-- bind tab button TextLabel directly
+function TranslationManager:BindTab(tab, origTitle)
+	if not origTitle or origTitle == "" or not tab then return end
+	task.defer(function()
+		local btn = rawget(tab, "Button")
+		local label = btn and typeof(btn) == "Instance" and findLabel(btn, origTitle)
+		if not label and self.Library and self.Library.GUI then
+			label = findLabel(self.Library.GUI, origTitle)
+		end
+		if label then bindLabel(label, origTitle) end
+	end)
+end
+
+-- ─── patching ────────────────────────────────────────────────────────────────
+
 function TranslationManager:PatchSection(section)
-	if not section or section.__tm_patched then return end
-	section.__tm_patched = true
+	if not section or rawget(section, "__tm") then return end
+	rawset(section, "__tm", true)
 	local _self = self
 	local types = {"Toggle","Slider","Dropdown","Button","Input","Keybind","Colorpicker","Paragraph"}
 	for _, etype in ipairs(types) do
-		local methodName = "Add"..etype
-		local orig = section[methodName]
+		local orig = section["Add"..etype]
 		if type(orig) == "function" then
-			section[methodName] = function(sec, idOrOpts, opts)
+			section["Add"..etype] = function(sec, idOrOpts, opts)
 				local el = orig(sec, idOrOpts, opts)
 				local o = (type(idOrOpts) == "table" and idOrOpts) or (type(opts) == "table" and opts) or {}
-				if el then _self:TranslateElement(el, o.Title, o.Description) end
+				if el then _self:BindElement(el, o.Title, o.Description) end
 				return el
 			end
 		end
@@ -203,60 +279,41 @@ function TranslationManager:PatchSection(section)
 end
 
 function TranslationManager:PatchTab(tab)
-	if not tab or tab.__tm_patched then return end
-	tab.__tm_patched = true
+	if not tab or rawget(tab, "__tm") then return end
+	rawset(tab, "__tm", true)
 	local origAddSection = tab.AddSection
 	if type(origAddSection) ~= "function" then return end
 	local _self = self
 	tab.AddSection = function(t, title)
 		local section = origAddSection(t, title)
-		if title and title ~= "" and section then
-			_self:Register(title, function(translated)
-				pcall(function()
-					if section.Frame then scanAndReplace(section.Frame, title, translated) end
-					if _self.Library and _self.Library.GUI then
-						scanAndReplace(_self.Library.GUI, title, translated)
-					end
-				end)
-			end)
-		end
+		if section then _self:BindSection(section, title) end
 		_self:PatchSection(section)
 		return section
 	end
 end
 
--- Call this immediately after CreateWindow, before any AddTab
 function TranslationManager:PatchWindow(window)
-	if not window or window.__tm_patched then return end
-	window.__tm_patched = true
+	if not window or rawget(window, "__tm") then return end
+	rawset(window, "__tm", true)
 	local origAddTab = window.AddTab
 	if type(origAddTab) ~= "function" then return end
 	local _self = self
 	window.AddTab = function(w, opts)
 		local o = opts or {}
 		local tab = origAddTab(w, o)
-		if o.Title and o.Title ~= "" and tab then
-			local origTitle = o.Title
-			_self:Register(origTitle, function(translated)
-				pcall(function()
-					if tab.Button then scanAndReplace(tab.Button, origTitle, translated) end
-					if _self.Library and _self.Library.GUI then
-						scanAndReplace(_self.Library.GUI, origTitle, translated)
-					end
-				end)
-			end)
-		end
+		if tab then _self:BindTab(tab, o.Title) end
 		_self:PatchTab(tab)
 		return tab
 	end
 end
+
+-- ─── settings section ────────────────────────────────────────────────────────
 
 function TranslationManager:BuildTranslationSection(tab)
 	assert(self.Library, "TranslationManager: call SetLibrary(Fluent) first")
 	self:LoadSettings()
 
 	local section = tab:AddSection("Translation")
-
 	local langNames   = self:GetLanguageNames()
 	local currentName = self:GetNameFromCode(self.Language)
 
@@ -268,9 +325,10 @@ function TranslationManager:BuildTranslationSection(tab)
 		Default     = currentName,
 		Callback    = function(selectedName)
 			local code = self:GetCodeFromName(selectedName)
+			if code == self.Language then return end
 			self:SetLanguage(code)
 			if self.Library then
-				self.Library:Notify({Title = "Translation", Content = "Language set to "..selectedName, Duration = 4})
+				self.Library:Notify({Title = "Translation", Content = "Applying "..selectedName.."...", Duration = 3})
 			end
 		end,
 	})
@@ -281,6 +339,7 @@ function TranslationManager:BuildTranslationSection(tab)
 		Title    = "Reset to English",
 		Icon     = "solar/refresh-bold",
 		Callback = function()
+			if self.Language == "en" then return end
 			self:SetLanguage("en")
 			dropdown:SetValue("English")
 			if self.Library then
