@@ -111,7 +111,6 @@ local function fetchBatch(texts, from, to, callback)
 	end
 end
 
--- add a setter function bound to an original text string
 local function addBinding(origText, setter)
 	if not origText or origText == "" then return end
 	if not TranslationManager.Bindings[origText] then
@@ -123,7 +122,6 @@ local function addBinding(origText, setter)
 	end
 end
 
--- find a specific TextLabel whose text == original inside a frame
 local function findLabel(root, original)
 	if not root or not root:IsA("Instance") then return nil end
 	for _, d in ipairs(root:GetDescendants()) do
@@ -134,15 +132,12 @@ local function findLabel(root, original)
 	return nil
 end
 
--- bind a direct TextLabel reference — re-translate always works regardless of current text
 local function bindLabel(label, origText)
 	if not label then return end
 	addBinding(origText, function(t)
 		pcall(function() label.Text = t end)
 	end)
 end
-
--- ─── public ──────────────────────────────────────────────────────────────────
 
 function TranslationManager:SetLibrary(lib)
 	self.Library = lib
@@ -187,7 +182,6 @@ function TranslationManager:GetNameFromCode(code)
 	return "English"
 end
 
--- batch all registered texts and apply to all stored setters
 function TranslationManager:SetLanguage(code)
 	self.Language = code
 	self:SaveSettings()
@@ -203,7 +197,6 @@ function TranslationManager:SetLanguage(code)
 	end)
 end
 
--- bind element's Title and Description via SetTitle/SetDesc + direct label ref
 function TranslationManager:BindElement(el, origTitle, origDesc)
 	if not el then return end
 	if origTitle and origTitle ~= "" then
@@ -232,7 +225,6 @@ function TranslationManager:BindElement(el, origTitle, origDesc)
 	end
 end
 
--- bind section header TextLabel directly
 function TranslationManager:BindSection(section, origTitle)
 	if not origTitle or origTitle == "" or not section then return end
 	task.defer(function()
@@ -245,7 +237,6 @@ function TranslationManager:BindSection(section, origTitle)
 	end)
 end
 
--- bind tab button TextLabel directly
 function TranslationManager:BindTab(tab, origTitle)
 	if not origTitle or origTitle == "" or not tab then return end
 	task.defer(function()
@@ -257,8 +248,6 @@ function TranslationManager:BindTab(tab, origTitle)
 		if label then bindLabel(label, origTitle) end
 	end)
 end
-
--- ─── patching ────────────────────────────────────────────────────────────────
 
 function TranslationManager:PatchSection(section)
 	if not section or rawget(section, "__tm") then return end
@@ -306,8 +295,6 @@ function TranslationManager:PatchWindow(window)
 		return tab
 	end
 end
-
--- ─── settings section ────────────────────────────────────────────────────────
 
 function TranslationManager:BuildTranslationSection(tab)
 	assert(self.Library, "TranslationManager: call SetLibrary(Fluent) first")
