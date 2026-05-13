@@ -47,6 +47,14 @@ All elements are added via `Tab:AddElementType(id, config)`.
 | `AddKeybind` | Keyboard/mouse keybind |
 | `AddButton` | Clickable button |
 | `AddParagraph` | Read-only text block |
+| `AddCode` | Copy Button |
+| `AddSpace` | Space|
+| `AddGroup` | Group other element|
+| `Addimage` | image in Window support httpGet and rbxassetid |
+| `AddDivider` | divider|
+| `AddVideo` | Video In window Support httpGet and rbxassetid|
+
+
 
 ## Custom Themes
 
