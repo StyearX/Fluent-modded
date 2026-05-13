@@ -127,7 +127,7 @@ SaveManager:LoadAutoloadConfig()
 -Add New Element `AddCode`, `AddImage`(not fully functional yet) , `AddVideo` (does not work ), `AddDivider`, `AddSpace`, `AddGroup` you can unlock it with NameSection:AddElementName
 
 - Fix Auto load on FBM
-- Fix Auto Loaf on Save manager
+- Fix Auto Load on Save manager
 - fix there Outline/uistroke on the slider thumb
 - fix Can't change UserInfoSubtitle and Userinfotitle in Userinfo Fixed
 
