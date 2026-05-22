@@ -14,7 +14,7 @@ A modified version of the [Fluent](https://github.com/dawid-scripts/Fluent) UI l
 
 ```lua
 local Fluent = loadstring(game:HttpGet(
-    "https://github.com/StyearX/Fluent-Modded/releases/download/Fluent/FluentLite"
+    "https://github.com/StyearX/Fluent-Modded/releases/download/Fluent/FluentPro"
 ))()
 
 local Window = Fluent:CreateWindow({
@@ -52,7 +52,9 @@ All elements are added via `Tab:AddElementType(id, config)`.
 | `AddGroup` | Group other element|
 | `Addimage` | image in Window support httpGet and rbxassetid |
 | `AddDivider` | divider|
-| `AddVideo` | Video In window Support httpGet and rbxassetid|
+| `AddVideo` | Video In window Supported rbxassetid|
+| `AddAudio` | Audio In window Supported httpGet /http url and rbxassetid|
+
 
 
 
@@ -121,7 +123,14 @@ SaveManager:LoadAutoloadConfig()
 
 ## Changelog
 
-### v1.3.1
+### v1.3.0
+- Remove language system (broken)
+- Add New Element `AddAudio`
+- Fix AddImages does not show Images in Window
+- Fix AddVideo does not show Video in Window
+- Remove http url support to video
+
+### v1.2.9
 - Add language system (broken)
 - Add Disable BackgroundImages (fully working can be enabled or disabled in the Interface manager
 - Add New Element `AddCode`, `AddImage`(not fully functional yet) , `AddVideo` (does not work ), `AddDivider`, `AddSpace`, `AddGroup` you can unlock it with NameSection:AddElementName
