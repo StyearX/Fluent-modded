@@ -5013,13 +5013,33 @@ local aa = {
                 end)
                 _pauseBtn.Visible = false
                 _stopBtn = _ctrlBtn("solar/stop-bold", function()
-                    _vid:Stop(); _playing=false
-                    if _playBtn  then _playBtn.Visible=true   end
-                    if _pauseBtn then _pauseBtn.Visible=false end
+                    -- Restart confirm dialog
+                    local _win = d.Library and d.Library.Window
+                    if _win then
+                        _win:Dialog({
+                            Title="Restart Video",
+                            Content="Are you sure you want to restart this video?",
+                            Buttons={
+                                {Title="Restart", Callback=function()
+                                    pcall(function()
+                                        _vid:Stop()
+                                        _playing=false
+                                    end)
+                                    if _playBtn  then _playBtn.Visible=true  end
+                                    if _pauseBtn then _pauseBtn.Visible=false end
+                                end},
+                                {Title="Cancel"},
+                            },
+                        })
+                    else
+                        _vid:Stop(); _playing=false
+                        if _playBtn  then _playBtn.Visible=true  end
+                        if _pauseBtn then _pauseBtn.Visible=false end
+                    end
                 end)
                 local _volImg = u("ImageLabel",{Size=UDim2.fromOffset(14,14),BackgroundTransparency=1,ZIndex=5,Parent=_controls,ThemeTag={ImageColor3="SubText"}})
                 _applyIcon(_volImg, "solar/volume-loud-bold")
-                u("TextLabel",{Size=UDim2.fromOffset(24,22),BackgroundTransparency=1,Text=tostring(math.floor(_vol*100)).."%",TextSize=10,Font=Enum.Font.Gotham,ZIndex=5,Parent=_controls,ThemeTag={TextColor3="SubText"}})
+                local _volLbl = u("TextLabel",{Size=UDim2.fromOffset(24,22),BackgroundTransparency=1,Text=tostring(math.floor(_vol*100)).."%",TextSize=10,Font=Enum.Font.Gotham,ZIndex=5,Parent=_controls,ThemeTag={TextColor3="SubText"}})
                 if _auto and _syncResolved ~= "" then
                     task.spawn(function()
                         task.wait(0.05)
@@ -5032,8 +5052,402 @@ local aa = {
                 end
                 _vid.DidLoop:Connect(function() end)
             end
-            _wrap.MouseEnter:Connect(function() if _hasVideo then _controls.Visible=true  end end)
-            _wrap.MouseLeave:Connect(function() if _hasVideo then _controls.Visible=false end end)
+            -- VIDEO seek bar (below video, visible on hover)
+            local _vidSeekRow = u("Frame",{
+                Size=UDim2.new(1,0,0,22),
+                Position=UDim2.new(0,0,1,0),
+                AnchorPoint=Vector2.new(0,1),
+                BackgroundColor3=Color3.fromRGB(0,0,0),
+                BackgroundTransparency=0.35,
+                BorderSizePixel=0,
+                ZIndex=4,
+                Visible=false,
+                Parent=_wrap,
+            })
+            u("UICorner",{CornerRadius=UDim.new(0,_radius),Parent=_vidSeekRow})
+            local _vidCurLbl = u("TextLabel",{
+                Size=UDim2.fromOffset(34,20),
+                Position=UDim2.new(0,4,0.5,0),
+                AnchorPoint=Vector2.new(0,0.5),
+                BackgroundTransparency=1,
+                Text="0:00",TextSize=9,Font=Enum.Font.Gotham,
+                ZIndex=5,Parent=_vidSeekRow,
+                ThemeTag={TextColor3="SubText"},
+            })
+            local _vidDurLbl = u("TextLabel",{
+                Size=UDim2.fromOffset(34,20),
+                Position=UDim2.new(1,-4,0.5,0),
+                AnchorPoint=Vector2.new(1,0.5),
+                BackgroundTransparency=1,
+                Text="0:00",TextSize=9,Font=Enum.Font.Gotham,
+                TextXAlignment=Enum.TextXAlignment.Right,
+                ZIndex=5,Parent=_vidSeekRow,
+                ThemeTag={TextColor3="SubText"},
+            })
+            local _vidRail = u("Frame",{
+                Size=UDim2.new(1,-80,0,4),
+                Position=UDim2.new(0,40,0.5,0),
+                AnchorPoint=Vector2.new(0,0.5),
+                BackgroundTransparency=0.65,
+                ZIndex=5,Parent=_vidSeekRow,
+                ThemeTag={BackgroundColor3="SubText"},
+            })
+            u("UICorner",{CornerRadius=UDim.new(1,0),Parent=_vidRail})
+            local _vidFill = u("Frame",{
+                Size=UDim2.new(0,0,1,0),
+                BackgroundTransparency=0,
+                ZIndex=6,Parent=_vidRail,
+                ThemeTag={BackgroundColor3="Accent"},
+            })
+            u("UICorner",{CornerRadius=UDim.new(1,0),Parent=_vidFill})
+            local _vidKnob = u("Frame",{
+                Size=UDim2.fromOffset(10,10),
+                Position=UDim2.new(0,0,0.5,0),
+                AnchorPoint=Vector2.new(0.5,0.5),
+                ZIndex=7,Parent=_vidRail,
+                ThemeTag={BackgroundColor3="Accent"},
+            })
+            u("UICorner",{CornerRadius=UDim.new(1,0),Parent=_vidKnob})
+            local _vidDragging = false
+            local _rs2 = game:GetService("RunService")
+            local _uis2 = game:GetService("UserInputService")
+            local function _vidSeekTo(inputX)
+                if not _vid then return end
+                local railX = _vidRail.AbsolutePosition.X
+                local railW = _vidRail.AbsoluteSize.X
+                if railW <= 0 then return end
+                local pct = math.clamp((inputX - railX) / railW, 0, 1)
+                local dur = _vid.TimeLength or 0
+                if dur > 0 then
+                    pcall(function() _vid.TimePosition = pct * dur end)
+                end
+                _vidRail:SetAttribute("SeekPct", pct)
+            end
+            _vidRail.InputBegan:Connect(function(inp)
+                if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
+                    _vidDragging = true; _vidSeekTo(inp.Position.X)
+                end
+            end)
+            _vidRail.InputEnded:Connect(function(inp)
+                if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
+                    _vidDragging = false
+                end
+            end)
+            _uis2.InputChanged:Connect(function(inp)
+                if _vidDragging and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+                    _vidSeekTo(inp.Position.X)
+                end
+            end)
+            local function _fmtTimeV(s)
+                s = math.max(0, math.floor(s or 0))
+                return string.format("%d:%02d", math.floor(s/60), s%60)
+            end
+            local _vidHbConn = _rs2.Heartbeat:Connect(function()
+                if not _wrap.Parent then return end
+                if not _vid then return end
+                local dur = _vid.TimeLength or 0
+                local pos = pcall(function() return _vid.TimePosition end) and _vid.TimePosition or 0
+                if dur > 0 then
+                    local pct = math.clamp(pos / dur, 0, 1)
+                    _vidFill.Size = UDim2.new(pct,0,1,0)
+                    _vidKnob.Position = UDim2.new(pct,0,0.5,0)
+                    _vidCurLbl.Text = _fmtTimeV(pos)
+                    _vidDurLbl.Text = _fmtTimeV(dur)
+                    _vidRail:SetAttribute("SeekPct", pct)
+                else
+                    local pct = _vidRail:GetAttribute("SeekPct") or 0
+                    _vidFill.Size = UDim2.new(pct,0,1,0)
+                    _vidKnob.Position = UDim2.new(pct,0,0.5,0)
+                end
+            end)
+            if _hasVideo then
+                _wrap.Size = UDim2.new(1,-16,0,220)
+                _vid.Size = UDim2.new(1,0,0,152)
+                _vid.Position = UDim2.new(0,0,0,0)
+                _controls.Position = UDim2.new(0,0,0,156)
+                _controls.Size = UDim2.new(1,0,0,30)
+                _controls.AnchorPoint = Vector2.new(0,0)
+                _controls.Visible = true
+                _vidSeekRow.Position = UDim2.new(0,0,0,190)
+                _vidSeekRow.Size = UDim2.new(1,0,0,24)
+                _vidSeekRow.AnchorPoint = Vector2.new(0,0)
+                _vidSeekRow.Visible = true
+            end
+            local _floatGui = nil
+            local _floatActive = false
+            local _floatBtn = nil
+            if _hasVideo and _vid then
+                local _floatToggleBtn = u("TextButton",{Size=UDim2.fromOffset(22,22),BackgroundTransparency=1,Text="",ZIndex=5,Parent=_controls})
+                local _floatIcWrap = u("ImageLabel",{Size=UDim2.fromOffset(16,16),Position=UDim2.new(0.5,0,0.5,0),AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,ZIndex=6,Parent=_floatToggleBtn,ThemeTag={ImageColor3="Text"}})
+                _applyIcon(_floatIcWrap, "solar/maximize-square-bold")
+                _floatBtn = _floatToggleBtn
+                local _lp = game:GetService("Players").LocalPlayer
+                local _uis3 = game:GetService("UserInputService")
+                local function _openFloat()
+                    if _floatActive then return end
+                    _floatActive = true
+                    _floatGui = Instance.new("ScreenGui")
+                    _floatGui.Name = "BFFloatVideo"
+                    _floatGui.ResetOnSpawn = false
+                    _floatGui.DisplayOrder = 9999
+                    _floatGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+                    _floatGui.Parent = _lp and _lp:FindFirstChildOfClass("PlayerGui") or game:GetService("CoreGui")
+                    local _fw = 320
+                    local _fh = 200
+                    local _fframe = Instance.new("Frame")
+                    _fframe.Name = "FloatVideoFrame"
+                    _fframe.Size = UDim2.fromOffset(_fw, _fh)
+                    _fframe.Position = UDim2.new(0.5, -_fw/2, 0.3, 0)
+                    _fframe.BackgroundColor3 = Color3.fromRGB(10,10,14)
+                    _fframe.BorderSizePixel = 0
+                    _fframe.ClipsDescendants = true
+                    _fframe.Parent = _floatGui
+                    Instance.new("UICorner", _fframe).CornerRadius = UDim.new(0, 8)
+                    local _fstroke = Instance.new("UIStroke", _fframe)
+                    _fstroke.Thickness = 1.5
+                    _fstroke.Color = Color3.fromRGB(80,80,120)
+                    local _fvid = Instance.new("VideoFrame")
+                    _fvid.Size = UDim2.new(1,0,1,-54)
+                    _fvid.Position = UDim2.new(0,0,0,0)
+                    _fvid.BackgroundTransparency = 1
+                    _fvid.Looped = _looped
+                    _fvid.Volume = _vol
+                    _fvid.Video = _syncResolved
+                    _fvid.Parent = _fframe
+                    if _playing then pcall(function() _fvid:Play() end) end
+                    local _ftopbar = Instance.new("Frame")
+                    _ftopbar.Name = "Topbar"
+                    _ftopbar.Size = UDim2.new(1,0,0,26)
+                    _ftopbar.Position = UDim2.new(0,0,1,-54)
+                    _ftopbar.BackgroundColor3 = Color3.fromRGB(0,0,0)
+                    _ftopbar.BackgroundTransparency = 0.35
+                    _ftopbar.BorderSizePixel = 0
+                    _ftopbar.ZIndex = 5
+                    _ftopbar.Parent = _fframe
+                    local _ftopLL = Instance.new("UIListLayout", _ftopbar)
+                    _ftopLL.FillDirection = Enum.FillDirection.Horizontal
+                    _ftopLL.VerticalAlignment = Enum.VerticalAlignment.Center
+                    _ftopLL.Padding = UDim.new(0,4)
+                    Instance.new("UIPadding", _ftopbar).PaddingLeft = UDim.new(0,6)
+                    local function _fctrlBtn(iconName, cb)
+                        local fb = Instance.new("TextButton")
+                        fb.Size = UDim2.fromOffset(22,22)
+                        fb.BackgroundTransparency = 1
+                        fb.Text = ""
+                        fb.ZIndex = 6
+                        fb.Parent = _ftopbar
+                        local fi = Instance.new("ImageLabel")
+                        fi.Size = UDim2.fromOffset(14,14)
+                        fi.Position = UDim2.new(0.5,0,0.5,0)
+                        fi.AnchorPoint = Vector2.new(0.5,0.5)
+                        fi.BackgroundTransparency = 1
+                        fi.ZIndex = 7
+                        fi.Parent = fb
+                        _applyIcon(fi, iconName)
+                        fb.MouseButton1Click:Connect(function() pcall(cb) end)
+                        return fb
+                    end
+                    local _fPlayBtn, _fPauseBtn
+                    _fPlayBtn = _fctrlBtn("solar/play-bold", function()
+                        pcall(function() _fvid:Play(); _vid:Play() end)
+                        _playing = true
+                        _fPlayBtn.Visible = false; _fPauseBtn.Visible = true
+                        if _playBtn then _playBtn.Visible=false end; if _pauseBtn then _pauseBtn.Visible=true end
+                    end)
+                    _fPauseBtn = _fctrlBtn("solar/pause-bold", function()
+                        pcall(function() _fvid:Pause(); _vid:Pause() end)
+                        _playing = false
+                        _fPlayBtn.Visible = true; _fPauseBtn.Visible = false
+                        if _playBtn then _playBtn.Visible=true end; if _pauseBtn then _pauseBtn.Visible=false end
+                    end)
+                    if _playing then _fPlayBtn.Visible=false; _fPauseBtn.Visible=true
+                    else _fPauseBtn.Visible=false end
+                    _fctrlBtn("solar/stop-bold", function()
+                        pcall(function() _fvid:Stop(); _vid:Stop() end)
+                        _playing = false
+                        _fPlayBtn.Visible = true; _fPauseBtn.Visible = false
+                        if _playBtn then _playBtn.Visible=true end; if _pauseBtn then _pauseBtn.Visible=false end
+                    end)
+                    local _returnBtn = _fctrlBtn("solar/minimize-square-bold", function()
+                        _floatActive = false
+                        pcall(function()
+                            if _playing then _vid:Play() else _vid:Stop() end
+                            _fvid:Stop()
+                        end)
+                        _floatGui:Destroy(); _floatGui = nil
+                    end)
+                    local _lockBtn = _fctrlBtn("solar/lock-keyhole-bold", function()
+                        local cur = _fframe:GetAttribute("Locked") or false
+                        _fframe:SetAttribute("Locked", not cur)
+                        _applyIcon(_fctrlBtn == _lockBtn and Instance.new("ImageLabel") or Instance.new("ImageLabel"), not cur and "solar/lock-keyhole-bold" or "solar/lock-keyhole-unlocked-bold")
+                    end)
+                    local _fseekRow = Instance.new("Frame")
+                    _fseekRow.Size = UDim2.new(1,0,0,22)
+                    _fseekRow.Position = UDim2.new(0,0,1,-26)
+                    _fseekRow.BackgroundColor3 = Color3.fromRGB(0,0,0)
+                    _fseekRow.BackgroundTransparency = 0.35
+                    _fseekRow.BorderSizePixel = 0
+                    _fseekRow.ZIndex = 5
+                    _fseekRow.Parent = _fframe
+                    Instance.new("UICorner", _fseekRow).CornerRadius = UDim.new(0,8)
+                    local _fCurLbl = Instance.new("TextLabel")
+                    _fCurLbl.Size = UDim2.fromOffset(34,20)
+                    _fCurLbl.Position = UDim2.new(0,4,0.5,0)
+                    _fCurLbl.AnchorPoint = Vector2.new(0,0.5)
+                    _fCurLbl.BackgroundTransparency = 1
+                    _fCurLbl.Text = "0:00"; _fCurLbl.TextSize = 9
+                    _fCurLbl.Font = Enum.Font.Gotham; _fCurLbl.ZIndex = 6
+                    _fCurLbl.TextColor3 = Color3.fromRGB(200,200,200)
+                    _fCurLbl.Parent = _fseekRow
+                    local _fDurLbl = Instance.new("TextLabel")
+                    _fDurLbl.Size = UDim2.fromOffset(34,20)
+                    _fDurLbl.Position = UDim2.new(1,-4,0.5,0)
+                    _fDurLbl.AnchorPoint = Vector2.new(1,0.5)
+                    _fDurLbl.BackgroundTransparency = 1
+                    _fDurLbl.Text = "0:00"; _fDurLbl.TextSize = 9
+                    _fDurLbl.Font = Enum.Font.Gotham; _fDurLbl.ZIndex = 6
+                    _fDurLbl.TextXAlignment = Enum.TextXAlignment.Right
+                    _fDurLbl.TextColor3 = Color3.fromRGB(200,200,200)
+                    _fDurLbl.Parent = _fseekRow
+                    local _fRail = Instance.new("Frame")
+                    _fRail.Size = UDim2.new(1,-80,0,4)
+                    _fRail.Position = UDim2.new(0,40,0.5,0)
+                    _fRail.AnchorPoint = Vector2.new(0,0.5)
+                    _fRail.BackgroundColor3 = Color3.fromRGB(120,120,140)
+                    _fRail.BackgroundTransparency = 0.65
+                    _fRail.ZIndex = 6; _fRail.Parent = _fseekRow
+                    Instance.new("UICorner", _fRail).CornerRadius = UDim.new(1,0)
+                    local _fFill = Instance.new("Frame")
+                    _fFill.Size = UDim2.new(0,0,1,0)
+                    _fFill.BackgroundColor3 = Color3.fromRGB(96,180,255)
+                    _fFill.ZIndex = 7; _fFill.Parent = _fRail
+                    Instance.new("UICorner", _fFill).CornerRadius = UDim.new(1,0)
+                    local _fKnob = Instance.new("Frame")
+                    _fKnob.Size = UDim2.fromOffset(10,10)
+                    _fKnob.AnchorPoint = Vector2.new(0.5,0.5)
+                    _fKnob.Position = UDim2.new(0,0,0.5,0)
+                    _fKnob.BackgroundColor3 = Color3.fromRGB(96,180,255)
+                    _fKnob.ZIndex = 8; _fKnob.Parent = _fRail
+                    Instance.new("UICorner", _fKnob).CornerRadius = UDim.new(1,0)
+                    local _fDragging = false
+                    _fRail.InputBegan:Connect(function(inp)
+                        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
+                            _fDragging = true
+                            local rX = _fRail.AbsolutePosition.X; local rW = _fRail.AbsoluteSize.X
+                            if rW > 0 then
+                                local pct = math.clamp((inp.Position.X - rX)/rW, 0, 1)
+                                local dur = _fvid.TimeLength or 0
+                                if dur > 0 then pcall(function() _fvid.TimePosition = pct*dur end) end
+                            end
+                        end
+                    end)
+                    _fRail.InputEnded:Connect(function(inp)
+                        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then _fDragging = false end
+                    end)
+                    _uis3.InputChanged:Connect(function(inp)
+                        if _fDragging and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+                            local rX = _fRail.AbsolutePosition.X; local rW = _fRail.AbsoluteSize.X
+                            if rW > 0 then
+                                local pct = math.clamp((inp.Position.X - rX)/rW, 0, 1)
+                                local dur = _fvid.TimeLength or 0
+                                if dur > 0 then pcall(function() _fvid.TimePosition = pct*dur end) end
+                            end
+                        end
+                    end)
+                    local _fHb = _rs2.Heartbeat:Connect(function()
+                        if not _fframe.Parent then return end
+                        local dur = _fvid.TimeLength or 0
+                        local pos = 0; pcall(function() pos = _fvid.TimePosition end)
+                        if dur > 0 then
+                            local pct = math.clamp(pos/dur,0,1)
+                            _fFill.Size = UDim2.new(pct,0,1,0)
+                            _fKnob.Position = UDim2.new(pct,0,0.5,0)
+                            _fCurLbl.Text = _fmtTimeV(pos)
+                            _fDurLbl.Text = _fmtTimeV(dur)
+                        end
+                    end)
+                    local _resizeHandle = Instance.new("TextButton")
+                    _resizeHandle.Name = "ResizeHandle"
+                    _resizeHandle.Size = UDim2.fromOffset(18,18)
+                    _resizeHandle.Position = UDim2.new(1,-2,1,-2)
+                    _resizeHandle.AnchorPoint = Vector2.new(1,1)
+                    _resizeHandle.BackgroundColor3 = Color3.fromRGB(70,70,100)
+                    _resizeHandle.BackgroundTransparency = 0.25
+                    _resizeHandle.Text = ""
+                    _resizeHandle.ZIndex = 12
+                    _resizeHandle.Parent = _fframe
+                    Instance.new("UICorner", _resizeHandle).CornerRadius = UDim.new(0,4)
+                    local _resizeIc = Instance.new("ImageLabel")
+                    _resizeIc.Size = UDim2.fromOffset(12,12)
+                    _resizeIc.Position = UDim2.new(0.5,0,0.5,0)
+                    _resizeIc.AnchorPoint = Vector2.new(0.5,0.5)
+                    _resizeIc.BackgroundTransparency = 1
+                    _resizeIc.ZIndex = 13
+                    _resizeIc.Parent = _resizeHandle
+                    _applyIcon(_resizeIc, "solar/expand-bold")
+                    local _resizing = false; local _resizeStart, _resizeStartSize
+                    _resizeHandle.InputBegan:Connect(function(inp)
+                        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
+                            _resizing = true; _resizeStart = inp.Position
+                            _resizeStartSize = Vector2.new(_fframe.AbsoluteSize.X, _fframe.AbsoluteSize.Y)
+                            inp.Changed:Connect(function()
+                                if inp.UserInputState == Enum.UserInputState.End then _resizing = false end
+                            end)
+                        end
+                    end)
+                    _uis3.InputChanged:Connect(function(inp)
+                        if _resizing and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+                            local delta = inp.Position - _resizeStart
+                            local nw = math.max(220, _resizeStartSize.X + delta.X)
+                            local nh = math.max(160, _resizeStartSize.Y + delta.Y)
+                            _fframe.Size = UDim2.fromOffset(nw, nh)
+                        end
+                    end)
+                    _fframe:SetAttribute("Locked", false)
+                    local _dragging2 = false
+                    local _dragInput2, _dragStart2, _startPos2 = nil, nil, nil
+                    local _holding2, _holdToken2 = false, 0
+                    local function _updateDrag2(input)
+                        if _fframe:GetAttribute("Locked") then return end
+                        local delta = input.Position - _dragStart2
+                        _fframe.Position = UDim2.new(_startPos2.X.Scale, _startPos2.X.Offset + delta.X, _startPos2.Y.Scale, _startPos2.Y.Offset + delta.Y)
+                    end
+                    local function _toggleLock2()
+                        local newState = not _fframe:GetAttribute("Locked")
+                        _fframe:SetAttribute("Locked", newState)
+                        local _lib = d.Library
+                        if _lib then _lib:Notify({Title=newState and "Video Locked" or "Video Unlocked", Content=newState and "Locked in place." or "Can now be moved.", Duration=2}) end
+                    end
+                    _fframe.InputBegan:Connect(function(inp)
+                        if inp.UserInputType ~= Enum.UserInputType.MouseButton1 and inp.UserInputType ~= Enum.UserInputType.Touch then return end
+                        if _resizing then return end
+                        _dragging2 = not _fframe:GetAttribute("Locked")
+                        _holding2 = true; _dragStart2 = inp.Position; _startPos2 = _fframe.Position
+                        _holdToken2 += 1; local token = _holdToken2
+                        task.delay(1.0, function() if _holding2 and token == _holdToken2 then _toggleLock2() end end)
+                        inp.Changed:Connect(function()
+                            if inp.UserInputState == Enum.UserInputState.End then _dragging2 = false; _holding2 = false end
+                        end)
+                    end)
+                    _fframe.InputChanged:Connect(function(inp)
+                        if not _dragStart2 then return end
+                        if inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch then
+                            if (inp.Position - _dragStart2).Magnitude > 6 then _holding2 = false end
+                            _dragInput2 = inp
+                        end
+                    end)
+                    _uis3.InputChanged:Connect(function(inp)
+                        if inp == _dragInput2 and _dragging2 then _updateDrag2(inp) end
+                    end)
+                end
+                _floatToggleBtn.MouseButton1Click:Connect(function()
+                    if not _floatActive then _openFloat()
+                    else
+                        if _floatGui then _floatGui:Destroy(); _floatGui = nil end
+                        _floatActive = false
+                    end
+                end)
+            end
             local _mod = {Frame=_wrap, Type="Video", VideoFrame=_vid}
             function _mod:Play()   if _vid then pcall(function() _vid:Play()  end) end end
             function _mod:Pause()  if _vid then pcall(function() _vid:Pause() end) end end
@@ -5055,7 +5469,10 @@ local aa = {
             function _mod:SetVolume(v)
                 if _vid then _vid.Volume = math.clamp(v,0,1) end
             end
-            function _mod:Destroy() _wrap:Destroy() end
+            function _mod:Destroy()
+                if _vidHbConn then pcall(function() _vidHbConn:Disconnect() end) end
+                _wrap:Destroy()
+            end
             return _mod
         end
         return c
@@ -5201,13 +5618,32 @@ local aa = {
             local _resolved = _resolve(_src)
             local _hasAudio = _resolved ~= ""
             local _snd = nil
+            local _playOutside = (_opts.PlayOutsideWindow == true)
             if _hasAudio then
+                -- Destroy any duplicate BFAudio sounds to prevent double-audio bug
+                local _sndSvc = game:GetService("SoundService")
+                for _, _ex in ipairs(_sndSvc:GetChildren()) do
+                    if _ex:IsA("Sound") and _ex.Name == "BFAudio" and _ex.SoundId == _resolved then
+                        pcall(function() _ex:Stop(); _ex:Destroy() end)
+                    end
+                end
+                for _, _ex in ipairs(workspace:GetChildren()) do
+                    if _ex:IsA("Sound") and _ex.Name == "BFAudio" and _ex.SoundId == _resolved then
+                        pcall(function() _ex:Stop(); _ex:Destroy() end)
+                    end
+                end
                 _snd = Instance.new("Sound")
                 _snd.Name    = "BFAudio"
                 _snd.SoundId = _resolved
                 _snd.Volume  = _vol
                 _snd.Looped  = _looped
-                _snd.Parent  = workspace
+                -- PlayOutsideWindow: parent to SoundService so audio persists even if GUI minimized
+                if _playOutside then
+                    _snd.RollOffMaxDistance = 10000
+                    _snd.Parent = game:GetService("SoundService")
+                else
+                    _snd.Parent = workspace
+                end
             end
             local _rs  = game:GetService("RunService")
             local _uis = game:GetService("UserInputService")
@@ -5225,8 +5661,12 @@ local aa = {
                     imgLabel.Image = tostring(_ic)
                 end
             end
+            local _audioTitle    = _opts.AudioTitle    or _opts.Title    or (_hasAudio and "Audio" or nil)
+            local _audioSubtitle = _opts.AudioSubtitle or _opts.SubTitle or nil
+            local _hasLabels = (_audioTitle ~= nil and _audioTitle ~= "") or (_audioSubtitle ~= nil and _audioSubtitle ~= "")
+            local _wrapHeight = _hasLabels and 118 or 96
             local _wrap = u("Frame",{
-                Size=UDim2.new(1,-16,0,78),
+                Size=UDim2.new(1,-16,0,_wrapHeight),
                 BackgroundTransparency=0.9,
                 BorderSizePixel=0,
                 Parent=_parent,
@@ -5234,9 +5674,9 @@ local aa = {
             })
             u("UICorner",{CornerRadius=UDim.new(0,8),Parent=_wrap})
             u("UIStroke",{Transparency=0.6,Thickness=1,ThemeTag={Color="InElementBorder"},Parent=_wrap})
-            u("UIPadding",{PaddingLeft=UDim.new(0,10),PaddingRight=UDim.new(0,10),PaddingTop=UDim.new(0,6),PaddingBottom=UDim.new(0,6),Parent=_wrap})
+            u("UIPadding",{PaddingLeft=UDim.new(0,10),PaddingRight=UDim.new(0,10),PaddingTop=UDim.new(0,10),PaddingBottom=UDim.new(0,10),Parent=_wrap})
             local _topRow = u("Frame",{
-                Size=UDim2.new(1,0,0,30),
+                Size=UDim2.new(1,0,0,_hasLabels and 38 or 28),
                 BackgroundTransparency=1,
                 Parent=_wrap,
             })
@@ -5250,20 +5690,44 @@ local aa = {
                 ThemeTag={ImageColor3=_hasAudio and "Accent" or "SubText"},
             })
             _applyAudioIcon(_audioIconImg, "solar/volume-loud-bold")
-            local _statusLbl = u("TextLabel",{
+            local _titleHolder = u("Frame",{
                 Size=UDim2.new(1,-110,1,0),
                 Position=UDim2.new(0,28,0,0),
                 BackgroundTransparency=1,
-                Text=_hasAudio and "Audio" or "No audio source",
-                TextSize=11,
-                Font=Enum.Font.Gotham,
-                TextXAlignment=Enum.TextXAlignment.Left,
                 ZIndex=2,
                 Parent=_topRow,
+            })
+            local _statusLbl = u("TextLabel",{
+                Size=UDim2.new(1,0,0,16),
+                Position=UDim2.new(0,0,0,_hasLabels and 2 or 0),
+                AnchorPoint=Vector2.new(0,0),
+                BackgroundTransparency=1,
+                Text=(_audioTitle ~= nil and _audioTitle ~= "") and _audioTitle or (_hasAudio and "Audio" or "No audio source"),
+                TextSize=_hasLabels and 12 or 11,
+                Font=_hasLabels and Enum.Font.GothamBold or Enum.Font.Gotham,
+                TextXAlignment=Enum.TextXAlignment.Left,
+                TextTruncate=Enum.TextTruncate.AtEnd,
+                ZIndex=2,
+                Parent=_titleHolder,
                 ThemeTag={TextColor3=_hasAudio and "Text" or "SubText"},
             })
+            local _subtitleLbl = u("TextLabel",{
+                Size=UDim2.new(1,0,0,13),
+                Position=UDim2.new(0,0,0,20),
+                AnchorPoint=Vector2.new(0,0),
+                BackgroundTransparency=1,
+                Text=(_audioSubtitle ~= nil) and _audioSubtitle or "",
+                TextSize=10,
+                Font=Enum.Font.Gotham,
+                TextXAlignment=Enum.TextXAlignment.Left,
+                TextTruncate=Enum.TextTruncate.AtEnd,
+                Visible=(_audioSubtitle ~= nil and _audioSubtitle ~= ""),
+                ZIndex=2,
+                Parent=_titleHolder,
+                ThemeTag={TextColor3="SubText"},
+            })
             local _controls = u("Frame",{
-                Size=UDim2.new(0,90,1,0),
+                Size=UDim2.new(0,116,1,0),
                 Position=UDim2.new(1,0,0,0),
                 AnchorPoint=Vector2.new(1,0),
                 BackgroundTransparency=1,
@@ -5276,10 +5740,11 @@ local aa = {
                 local _icImg = u("ImageLabel",{Size=UDim2.fromOffset(16,16),Position=UDim2.new(0.5,0,0.5,0),AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,ZIndex=4,Parent=btn,ThemeTag={ImageColor3="Text"}})
                 _applyAudioIcon(_icImg, iconName)
                 btn.MouseButton1Click:Connect(function() pcall(cb) end)
-                return btn
+                return btn, _icImg
             end
             local _playing = false
             local _playBtn, _pauseBtn
+            local _outsideIcImg
             if _hasAudio and _snd then
                 _playBtn  = _ctrlBtn("solar/play-bold", function()
                     _snd:Play(); _playing=true
@@ -5293,19 +5758,58 @@ local aa = {
                 end)
                 _pauseBtn.Visible = false
                 _ctrlBtn("solar/stop-bold", function()
-                    _snd:Stop(); _playing=false
-                    if _playBtn  then _playBtn.Visible=true   end
-                    if _pauseBtn then _pauseBtn.Visible=false  end
+                    local _win = d.Library and d.Library.Window
+                    if _win then
+                        _win:Dialog({
+                            Title="Restart Audio",
+                            Content="Are you sure you want to restart this audio?",
+                            Buttons={
+                                {Title="Restart", Callback=function()
+                                    pcall(function()
+                                        _snd:Stop()
+                                        _snd.TimePosition = 0
+                                        _playing=false
+                                    end)
+                                    if _playBtn  then _playBtn.Visible=true  end
+                                    if _pauseBtn then _pauseBtn.Visible=false end
+                                end},
+                                {Title="Cancel"},
+                            },
+                        })
+                    else
+                        _snd:Stop(); _playing=false
+                        if _playBtn  then _playBtn.Visible=true  end
+                        if _pauseBtn then _pauseBtn.Visible=false end
+                    end
                 end)
+                local _outsideBtn2, _outsideIc2 = _ctrlBtn(_playOutside and "solar/export-bold" or "solar/export-bold", function()
+                    _playOutside = not _playOutside
+                    _applyAudioIcon(_outsideIc2, _playOutside and "solar/export-bold" or "solar/import-bold")
+                    if _snd then
+                        local wasPlaying = _playing
+                        pcall(function() if wasPlaying then _snd:Stop() end end)
+                        if _playOutside then
+                            _snd.Parent = game:GetService("SoundService")
+                        else
+                            _snd.Parent = workspace
+                        end
+                        if wasPlaying then pcall(function() _snd:Play() end) end
+                    end
+                    local _lib = d.Library
+                    if _lib then _lib:Notify({Title="Audio", Content=_playOutside and "Play Outside Window: ON" or "Play Outside Window: OFF", Type="Info", Duration=2}) end
+                end)
+                _outsideIcImg = _outsideIc2
+                _applyAudioIcon(_outsideIcImg, _playOutside and "solar/export-bold" or "solar/import-bold")
                 if _auto then
                     _snd:Play(); _playing=true
                     if _playBtn  then _playBtn.Visible=false end
                     if _pauseBtn then _pauseBtn.Visible=true  end
                 end
             end
+            local _seekRowOffset = _hasLabels and 56 or 36
             local _seekRow = u("Frame",{
                 Size=UDim2.new(1,0,0,24),
-                Position=UDim2.new(0,0,0,36),
+                Position=UDim2.new(0,0,0,_seekRowOffset),
                 BackgroundTransparency=1,
                 Visible=_hasAudio,
                 Parent=_wrap,
@@ -5402,6 +5906,21 @@ local aa = {
                 _fill.Size     = UDim2.new(pct, 0, 1, 0)
                 _knob.Position = UDim2.new(pct, 0, 0.5, 0)
             end)
+            if d.Library and d.Library.Window then
+                local _win = d.Library.Window
+                local _hideConn
+                _hideConn = game:GetService("RunService").Heartbeat:Connect(function()
+                    if not _wrap.Parent then if _hideConn then _hideConn:Disconnect() end return end
+                    if not _snd then return end
+                    local _isHidden = _win.Minimized
+                    if _isHidden and not _playOutside and _playing then
+                        pcall(function() _snd:Stop() end)
+                        _playing = false
+                        if _playBtn  then _playBtn.Visible  = true  end
+                        if _pauseBtn then _pauseBtn.Visible = false end
+                    end
+                end)
+            end
             local _mod = {Frame=_wrap, Type="Audio", Sound=_snd}
             function _mod:Play()   if _snd then pcall(function() _snd:Play()  end) end end
             function _mod:Pause()  if _snd then pcall(function() _snd:Pause() end) end end
@@ -5412,6 +5931,7 @@ local aa = {
             function _mod:SetAudio(src)
                 local r = _resolve(src)
                 if _snd then
+                    pcall(function() _snd:Stop() end)
                     _snd.SoundId = r
                 else
                     _snd = Instance.new("Sound")
@@ -5419,12 +5939,40 @@ local aa = {
                     _snd.SoundId = r
                     _snd.Volume  = _vol
                     _snd.Looped  = _looped
-                    _snd.Parent  = workspace
+                    if _playOutside then
+                        _snd.Parent = game:GetService("SoundService")
+                    else
+                        _snd.Parent = workspace
+                    end
                 end
                 _hasAudio = r ~= ""
                 _controls.Visible = _hasAudio
                 _seekRow.Visible  = _hasAudio
-                _statusLbl.Text   = _hasAudio and "Audio" or "No audio source"
+                _statusLbl.Text   = _hasAudio and (_audioTitle or "Audio") or "No audio source"
+                if _playBtn  then _playBtn.Visible  = _hasAudio end
+                if _pauseBtn then _pauseBtn.Visible = false end
+            end
+            function _mod:SetAudioTitle(title, subtitle)
+                _statusLbl.Text = title or (_hasAudio and "Audio" or "No audio source")
+                if subtitle ~= nil then
+                    _subtitleLbl.Text    = subtitle
+                    _subtitleLbl.Visible = subtitle ~= ""
+                end
+            end
+            function _mod:SetPlayOutside(enabled)
+                _playOutside = enabled
+                if _snd then
+                    local wasPlaying = _playing
+                    pcall(function() _snd:Stop() end)
+                    if enabled then
+                        _snd.Parent = game:GetService("SoundService")
+                    else
+                        _snd.Parent = workspace
+                    end
+                    if wasPlaying then
+                        pcall(function() _snd:Play() end)
+                    end
+                end
             end
             function _mod:Destroy()
                 if _hbConn then _hbConn:Disconnect() end
