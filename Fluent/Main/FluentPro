@@ -164,6 +164,7 @@ local aa = {
             MinimizeKeybind = nil,
             MinimizeKey = Enum.KeyCode.LeftControl,
             GUI = w,
+            PopupGUI = _nw,
             ErrorHandler = nil,
         }
         function x.SetErrorHandler(y, z)
@@ -246,6 +247,8 @@ local aa = {
             sfsymbols = "https://raw.githubusercontent.com/StyearX/Icons/refs/heads/main/sfsymbols/dist/Icons.lua",
             craft     = "https://raw.githubusercontent.com/StyearX/Icons/refs/heads/main/craft/dist/Icons.lua",
             geist     = "https://raw.githubusercontent.com/StyearX/Icons/refs/heads/main/geist/dist/Icons.lua",
+            hero      = "https://raw.githubusercontent.com/StyearX/Icons/refs/heads/main/hero/dist/Icons.lua",
+            gmi       = "https://raw.githubusercontent.com/StyearX/Icons/refs/heads/main/GoogleMaterialIcons/dist/Icons.lua",
         }
         local function LoadIconSource(prefix)
             if IconCache[prefix] then return IconCache[prefix] end
@@ -336,6 +339,184 @@ local aa = {
         end
 
         x.Elements = z
+
+        z.__type_Viewport = "Viewport"
+        z.AddViewport = function(C, Config)
+            Config = Config or {}
+            local _lib = x
+            local _UIS = game:GetService("UserInputService")
+            local _Creator = p
+
+            local _height     = Config.Height      or 200
+            local _focused    = Config.Focused     ~= false
+            local _interactive= Config.Interactive or false
+            local _camera     = Config.Camera      or Instance.new("Camera")
+            local _obj        = Config.Object
+
+            assert(_obj, "Viewport - Missing Object")
+
+            local _vp = {
+                __type      = "Viewport",
+                Object      = _obj,
+                Camera      = _camera,
+                Interactive = _interactive,
+                Height      = _height,
+                Focused     = _focused,
+            }
+
+            local _cornerR = (x.Window and x.Window.ElementConfig and x.Window.ElementConfig.UICorner) or 8
+
+            local _Dragging, _Pinching = false, false
+            local _LastMousePos, _LastPinchDist = nil, 0
+
+            local _vpFrame = Instance.new("Frame")
+            _vpFrame.Name = "ViewportHolder"
+            _vpFrame.Size = UDim2.new(1, 0, 0, _height)
+            _vpFrame.BackgroundTransparency = 1
+            _vpFrame.BorderSizePixel = 0
+            _vpFrame.Parent = C.Container
+
+            local _corner = Instance.new("UICorner")
+            _corner.CornerRadius = UDim.new(0, _cornerR)
+            _corner.Parent = _vpFrame
+
+            local _bg = Instance.new("ImageLabel")
+            _bg.Size = UDim2.fromScale(1, 1)
+            _bg.BackgroundTransparency = 0.1
+            _bg.BorderSizePixel = 0
+            _bg.Image = ""
+            _bg.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+            _bg.Parent = _vpFrame
+            local _bgCorner = Instance.new("UICorner")
+            _bgCorner.CornerRadius = UDim.new(0, _cornerR)
+            _bgCorner.Parent = _bg
+            _Creator.AddThemeObject(_bg, {BackgroundColor3 = "Element"})
+
+            local _canvas = Instance.new("CanvasGroup")
+            _canvas.Size = UDim2.fromScale(1, 1)
+            _canvas.BackgroundTransparency = 1
+            _canvas.Parent = _vpFrame
+            local _canvasCorner = Instance.new("UICorner")
+            _canvasCorner.CornerRadius = UDim.new(0, _cornerR)
+            _canvasCorner.Parent = _canvas
+
+            local _vpInner = Instance.new("ViewportFrame")
+            _vpInner.Name = "Viewport"
+            _vpInner.Size = UDim2.fromScale(1, 1)
+            _vpInner.BackgroundTransparency = 1
+            _vpInner.CurrentCamera = _vp.Camera
+            _vpInner.Active = _vp.Interactive
+            _vpInner.Parent = _canvas
+            _vp.Object.Parent = _vpInner
+
+            local _stroke = Instance.new("UIStroke")
+            _stroke.Transparency = 0.6
+            _stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            _stroke.Parent = _vpFrame
+            _Creator.AddThemeObject(_stroke, {Color = "InElementBorder"})
+
+            _Creator.AddSignal(_vpInner.MouseEnter, function()
+                if _vp.Interactive then
+                    local _sf = C.ScrollFrame
+                    if _sf then _sf.ScrollingEnabled = false end
+                end
+            end)
+            _Creator.AddSignal(_vpInner.InputEnded, function(inp)
+                if inp.UserInputType == Enum.UserInputType.MouseMovement
+                    or inp.UserInputType == Enum.UserInputType.Touch then
+                    local _sf = C.ScrollFrame
+                    if _sf then _sf.ScrollingEnabled = true end
+                end
+            end)
+            _Creator.AddSignal(_vpInner.InputBegan, function(inp)
+                if _vp.Interactive then
+                    if inp.UserInputType == Enum.UserInputType.MouseButton1
+                        or (inp.UserInputType == Enum.UserInputType.Touch and not _Pinching) then
+                        _Dragging = true
+                        _LastMousePos = inp.Position
+                    end
+                end
+            end)
+            _Creator.AddSignal(_UIS.InputEnded, function(inp)
+                if _vp.Interactive then
+                    if inp.UserInputType == Enum.UserInputType.MouseButton1
+                        or inp.UserInputType == Enum.UserInputType.Touch then
+                        _Dragging = false
+                    end
+                end
+            end)
+            _Creator.AddSignal(_UIS.InputChanged, function(inp)
+                if _vp.Interactive and _Dragging and not _Pinching then
+                    if inp.UserInputType == Enum.UserInputType.MouseMovement
+                        or inp.UserInputType == Enum.UserInputType.Touch then
+                        local delta = inp.Position - _LastMousePos
+                        _LastMousePos = inp.Position
+                        local pos = _vp.Object:GetPivot().Position
+                        local cam = _vp.Camera
+                        local ry = CFrame.fromAxisAngle(Vector3.new(0,1,0), -delta.X * 0.02)
+                        cam.CFrame = CFrame.new(pos) * ry * CFrame.new(-pos) * cam.CFrame
+                        local rx = CFrame.fromAxisAngle(cam.CFrame.RightVector, -delta.Y * 0.02)
+                        local pitched = CFrame.new(pos) * rx * CFrame.new(-pos) * cam.CFrame
+                        if pitched.UpVector.Y > 0.1 then cam.CFrame = pitched end
+                    end
+                end
+            end)
+            _Creator.AddSignal(_vpInner.InputChanged, function(inp)
+                if _vp.Interactive then
+                    if inp.UserInputType == Enum.UserInputType.MouseWheel then
+                        local zoom = inp.Position.Z * 2
+                        _vp.Camera.CFrame += _vp.Camera.CFrame.LookVector * zoom
+                    end
+                end
+            end)
+            _Creator.AddSignal(_UIS.TouchPinch, function(touches, scale, vel, state)
+                if _vp.Interactive then
+                    if state == Enum.UserInputState.Begin then
+                        _Pinching = true; _Dragging = false
+                        _LastPinchDist = (touches[1]-touches[2]).Magnitude
+                    elseif state == Enum.UserInputState.Change then
+                        local cur = (touches[1]-touches[2]).Magnitude
+                        local d = (cur - _LastPinchDist)*0.03
+                        _LastPinchDist = cur
+                        _vp.Camera.CFrame += _vp.Camera.CFrame.LookVector * d
+                    elseif state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel then
+                        _Pinching = false
+                    end
+                end
+            end)
+
+            local function _focusCamera()
+                local sz = _vp.Object:IsA("BasePart") and _vp.Object.Size
+                    or select(2, _vp.Object:GetBoundingBox(0))
+                local ext = math.max(sz.X, sz.Y, sz.Z)
+                local mpos = _vp.Object:GetPivot().Position
+                _vp.Camera.CFrame = CFrame.new(mpos + Vector3.new(0, ext/2, ext*2), mpos)
+            end
+            if _vp.Focused then _focusCamera() end
+
+            function _vp:SetObject(obj, clone)
+                if clone then obj = obj:Clone() end
+                if _vp.Object then _vp.Object:Destroy() end
+                _vp.Object = obj
+                _vp.Object.Parent = _vpInner
+            end
+            function _vp:SetHeight(h)
+                _vpFrame.Size = UDim2.new(1, 0, 0, h)
+            end
+            function _vp:Focus()
+                if _vp.Object then _focusCamera() end
+            end
+            function _vp:SetCamera(cam)
+                _vp.Camera = cam
+                _vpInner.CurrentCamera = cam
+            end
+            function _vp:SetInteractive(val)
+                _vp.Interactive = val
+                _vpInner.Active = val
+            end
+            _vp.Frame = _vpFrame
+            return _vp
+        end
         function x.CreateWindow(C, D)
             assert(D.Title, "Window - Missing Title")
             if x.Window then
@@ -354,6 +535,7 @@ local aa = {
                     UserInfoTitle = D.UserInfoTitle, UserInfoSubtitle = D.UserInfoSubtitle,
                     UserInfoColor = D.UserInfoColor,
                     Search = D.Search,
+                    TabLogo = D.TabLogo,
                 }
             x.Window = E
             x:SetTheme(D.Theme)
@@ -889,12 +1071,11 @@ local aa = {
             if src:match("^rbxassetid://") or src:match("^rbxasset://") then return src end
             if src:match("^%d+$") then return "rbxassetid://"..src end
             if not src:match("^https?://") then return "" end
-            local ext = (src:match("%.(%a+)%??[^/]*$") or defExt):lower()
+            local cleanPath = src:match("^[^?#]+") or src
+            local ext = (cleanPath:match("%.([^%.%/]+)$") or defExt):lower()
             if not exts[ext] then ext = defExt end
-            self:_init(sub)
-            local dir = self.Folder.."/"..sub
-            local mapPath = dir.."/_map.json"
             local hs = game:GetService("HttpService")
+            local mapPath = "bfc_"..sub.."_map.json"
             local map = {}
             pcall(function()
                 if isfile(mapPath) then
@@ -904,22 +1085,25 @@ local aa = {
             end)
             local key = tostring(#src).."_"..src:sub(1,40):gsub("[^%w]","")
             if map[key] then
-                local cp = dir.."/"..map[key]
+                local cp = map[key]
                 if isfile(cp) then
                     local ok,a = pcall(getcustomasset, cp)
                     if ok and a and a~="" then return a end
                 end
                 map[key] = nil
             end
-            local fname = self:_rname(ext)
-            local path  = dir.."/"..fname
-            local ok = pcall(function()
+            local body = nil
+            local dlOk = pcall(function()
                 local req = (syn and syn.request) or http_request or request
                 local r = req({Url=src,Method="GET",Headers={["User-Agent"]="Roblox/WinInet"}})
-                if r and r.Body and #r.Body>0 then writefile(path, r.Body) end
+                if r and r.Body and #r.Body > 128 then body = r.Body end
             end)
-            if ok and isfile(path) then
-                local ok2,a = pcall(getcustomasset, path)
+            if not (dlOk and body) then return "" end
+            local isFtyp = #body >= 8 and body:sub(5,8) == "ftyp"
+            local fname = self:_rname(isFtyp and "ogg" or ext)
+            writefile(fname, body)
+            if isfile(fname) then
+                local ok2,a = pcall(getcustomasset, fname)
                 if ok2 and a and a~="" then
                     map[key] = fname
                     pcall(function()
@@ -1527,7 +1711,7 @@ local aa = {
         local i, j = e(h.Packages.Flipper), e(h.Creator)
         local k, l = j.New, i.Spring.new
         return function(m, n, o, p, q)
-            local q_icon = (type(q) == "table") and q or nil  -- reserved for future use
+            local q_icon = (type(q) == "table") and q or nil
             local q = {}
             local _iconOffset = 0
             q.TitleLabel =
@@ -2492,6 +2676,44 @@ local aa = {
             local function _mkStroke(t2,thk) return s("UIStroke",{Transparency=t2,Thickness=thk or 1,ThemeTag={Color="InElementBorder"}}) end
 
 
+            if t.TabLogo then
+                local _logoH = 76
+                local _logoFrame = s("Frame",{
+                    Name="TabLogoFrame",
+                    Size=UDim2.new(1,0,0,_logoH),
+                    Position=UDim2.fromOffset(0,_topOffset),
+                    BackgroundTransparency=0.85,
+                    ThemeTag={BackgroundColor3="Element"},
+                },{
+                    _mkCorner(10), _mkStroke(0.5),
+                })
+                local _logoImg = s("ImageLabel",{
+                    Size=UDim2.fromOffset(52,52),
+                    Position=UDim2.new(0.5,0,0.5,0), AnchorPoint=Vector2.new(0.5,0.5),
+                    BackgroundTransparency=1,
+                    Image="",
+                    ScaleType=Enum.ScaleType.Fit,
+                    Parent=_logoFrame,
+                    ThemeTag={ImageColor3="Text"},
+                })
+                local _ic = u:GetIcon(t.TabLogo)
+                if _ic then
+                    if type(_ic) == "table" then
+                        _logoImg.Image = _ic.Image or ""
+                        _logoImg.ImageRectOffset = _ic.ImageRectOffset or Vector2.new(0,0)
+                        _logoImg.ImageRectSize   = _ic.ImageRectSize   or Vector2.new(0,0)
+                    else
+                        _logoImg.Image = tostring(_ic)
+                    end
+                else
+                    _logoImg.Image = tostring(t.TabLogo)
+                    _logoImg.ImageColor3 = Color3.fromRGB(255,255,255)
+                end
+                _topOffset = _topOffset + _logoH + 4
+                table.insert(_sidebarChildren, _logoFrame)
+            end
+
+
             if t.UserInfoTop then
                 local _lp = game:GetService("Players").LocalPlayer
                 local _av = ""
@@ -2500,6 +2722,10 @@ local aa = {
                         _lp.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
                 end)
                 local _h = 58
+                local _realDisplayName = t.UserInfoTitle or _lp.DisplayName
+                local _realUsername    = t.UserInfoSubtitle or ("@".._lp.Name)
+                local _anonActive = false
+
                 local _panel = s("Frame",{
                     Name="UserInfoTop",
                     Size=UDim2.new(1,0,0,_h),
@@ -2515,26 +2741,74 @@ local aa = {
                         ThemeTag={BackgroundColor3="Tab"},
                     },{_mkCorner(18)}),
                     s("TextLabel",{
+                        Name="DisplayName",
                         FontFace=Font.new("rbxasset://fonts/families/GothamSSm.json",Enum.FontWeight.SemiBold),
-                        Text=t.UserInfoTitle or _lp.DisplayName,
+                        Text=_realDisplayName,
                         TextSize=12, TextXAlignment=Enum.TextXAlignment.Left,
                         TextTruncate=Enum.TextTruncate.AtEnd,
                         BackgroundTransparency=1,
-                        Size=UDim2.new(1,-50,0,14), Position=UDim2.new(0,49,0,12),
+                        Size=UDim2.new(1,-66,0,14), Position=UDim2.new(0,49,0,12),
                         ThemeTag={TextColor3="Text"},
                     }),
                     s("TextLabel",{
+                        Name="Username",
                         FontFace=Font.new("rbxasset://fonts/families/GothamSSm.json"),
-                        Text=t.UserInfoSubtitle or ("@".._lp.Name),
+                        Text=_realUsername,
                         TextSize=10, TextXAlignment=Enum.TextXAlignment.Left,
                         TextTruncate=Enum.TextTruncate.AtEnd,
                         BackgroundTransparency=1,
-                        Size=UDim2.new(1,-50,0,13), Position=UDim2.new(0,49,0,30),
+                        Size=UDim2.new(1,-66,0,13), Position=UDim2.new(0,49,0,30),
                         ThemeTag={TextColor3="SubText"},
                     }),
                     s("Frame",{Size=UDim2.new(1,-10,0,1),Position=UDim2.new(0,5,1,-1),
                         BackgroundTransparency=0.7,ThemeTag={BackgroundColor3="TitleBarLine"}}),
                 })
+
+                local _eyeBtn = s("TextButton",{
+                    Name="AnonToggle",
+                    Size=UDim2.fromOffset(22,22),
+                    Position=UDim2.new(1,-4,0,4), AnchorPoint=Vector2.new(1,0),
+                    BackgroundTransparency=0.7, Text="",
+                    Parent=_panel,
+                    ThemeTag={BackgroundColor3="Tab"},
+                },{
+                    s("UICorner",{CornerRadius=UDim.new(0,5)}),
+                    s("UIStroke",{Transparency=0.5,Thickness=1,ThemeTag={Color="InElementBorder"}}),
+                    s("ImageLabel",{
+                        Name="EyeIcon",
+                        Size=UDim2.fromOffset(13,13),
+                        Position=UDim2.fromScale(0.5,0.5), AnchorPoint=Vector2.new(0.5,0.5),
+                        BackgroundTransparency=1,
+                        ScaleType=Enum.ScaleType.Fit,
+                        ThemeTag={ImageColor3="SubText"},
+                    }),
+                })
+                do
+                    local _eyeImg = _eyeBtn:FindFirstChild("EyeIcon")
+                    if _eyeImg then
+                        local _icOpen = u.GetIcon(u, "solar/eye-bold")
+                        local _icClosed = u.GetIcon(u, "solar/eye-closed-bold")
+                        local function _setEyeIcon(active)
+                            local _ic = active and _icClosed or _icOpen
+                            if _ic and type(_ic) == "table" then
+                                _eyeImg.Image = _ic.Image or ""
+                                _eyeImg.ImageRectOffset = _ic.ImageRectOffset or Vector2.new()
+                                _eyeImg.ImageRectSize   = _ic.ImageRectSize   or Vector2.new()
+                            elseif _ic then
+                                _eyeImg.Image = tostring(_ic)
+                            end
+                        end
+                        _setEyeIcon(false)
+                        local _dnLbl = _panel:FindFirstChild("DisplayName")
+                        local _unLbl = _panel:FindFirstChild("Username")
+                        m.AddSignal(_eyeBtn.MouseButton1Click, function()
+                            _anonActive = not _anonActive
+                            if _dnLbl then _dnLbl.Text = _anonActive and "Anonymous" or _realDisplayName end
+                            if _unLbl then _unLbl.Text = _anonActive and "@•••••••" or _realUsername end
+                            _setEyeIcon(_anonActive)
+                        end)
+                    end
+                end
 
                 if t.UserInfoColor then
                     local _accentFrame = _panel:FindFirstChildWhichIsA("Frame")
@@ -2594,6 +2868,9 @@ local aa = {
                 end)
                 local _h2 = 54
                 _botOffset = _h2 + 4
+                local _realDN2 = t.UserInfoTitle or t.UserInfoTitleBottom or _lp2.DisplayName
+                local _realUN2 = t.UserInfoSubtitle or t.UserInfoSubtitleBottom or ("@".._lp2.Name)
+                local _anonActive2 = false
                 local _bot = s("Frame",{
                     Name="UserInfo",
                     Size=UDim2.new(1,0,0,_h2),
@@ -2611,24 +2888,71 @@ local aa = {
                         ThemeTag={BackgroundColor3="Tab"},
                     },{_mkCorner(17)}),
                     s("TextLabel",{
+                        Name="DisplayName",
                         FontFace=Font.new("rbxasset://fonts/families/GothamSSm.json",Enum.FontWeight.SemiBold),
-                        Text=t.UserInfoTitle or t.UserInfoTitleBottom or _lp2.DisplayName,
+                        Text=_realDN2,
                         TextSize=12, TextXAlignment=Enum.TextXAlignment.Left,
                         TextTruncate=Enum.TextTruncate.AtEnd,
                         BackgroundTransparency=1,
-                        Size=UDim2.new(1,-48,0,14), Position=UDim2.new(0,47,0,10),
+                        Size=UDim2.new(1,-66,0,14), Position=UDim2.new(0,47,0,10),
                         ThemeTag={TextColor3="Text"},
                     }),
                     s("TextLabel",{
+                        Name="Username",
                         FontFace=Font.new("rbxasset://fonts/families/GothamSSm.json"),
-                        Text=t.UserInfoSubtitle or t.UserInfoSubtitleBottom or ("@".._lp2.Name),
+                        Text=_realUN2,
                         TextSize=10, TextXAlignment=Enum.TextXAlignment.Left,
                         TextTruncate=Enum.TextTruncate.AtEnd,
                         BackgroundTransparency=1,
-                        Size=UDim2.new(1,-48,0,13), Position=UDim2.new(0,47,0,27),
+                        Size=UDim2.new(1,-66,0,13), Position=UDim2.new(0,47,0,27),
                         ThemeTag={TextColor3="SubText"},
                     }),
                 })
+                local _eyeBtn2 = s("TextButton",{
+                    Name="AnonToggle",
+                    Size=UDim2.fromOffset(22,22),
+                    Position=UDim2.new(1,-4,0,4), AnchorPoint=Vector2.new(1,0),
+                    BackgroundTransparency=0.7, Text="",
+                    Parent=_bot,
+                    ThemeTag={BackgroundColor3="Tab"},
+                },{
+                    s("UICorner",{CornerRadius=UDim.new(0,5)}),
+                    s("UIStroke",{Transparency=0.5,Thickness=1,ThemeTag={Color="InElementBorder"}}),
+                    s("ImageLabel",{
+                        Name="EyeIcon",
+                        Size=UDim2.fromOffset(13,13),
+                        Position=UDim2.fromScale(0.5,0.5), AnchorPoint=Vector2.new(0.5,0.5),
+                        BackgroundTransparency=1,
+                        ScaleType=Enum.ScaleType.Fit,
+                        ThemeTag={ImageColor3="SubText"},
+                    }),
+                })
+                do
+                    local _eyeImg2 = _eyeBtn2:FindFirstChild("EyeIcon")
+                    if _eyeImg2 then
+                        local _icOpen2 = u.GetIcon(u, "solar/eye-bold")
+                        local _icClosed2 = u.GetIcon(u, "solar/eye-closed-bold")
+                        local function _setEyeIcon2(active)
+                            local _ic = active and _icClosed2 or _icOpen2
+                            if _ic and type(_ic) == "table" then
+                                _eyeImg2.Image = _ic.Image or ""
+                                _eyeImg2.ImageRectOffset = _ic.ImageRectOffset or Vector2.new()
+                                _eyeImg2.ImageRectSize   = _ic.ImageRectSize   or Vector2.new()
+                            elseif _ic then
+                                _eyeImg2.Image = tostring(_ic)
+                            end
+                        end
+                        _setEyeIcon2(false)
+                        local _dn2Lbl = _bot:FindFirstChild("DisplayName")
+                        local _un2Lbl = _bot:FindFirstChild("Username")
+                        m.AddSignal(_eyeBtn2.MouseButton1Click, function()
+                            _anonActive2 = not _anonActive2
+                            if _dn2Lbl then _dn2Lbl.Text = _anonActive2 and "Anonymous" or _realDN2 end
+                            if _un2Lbl then _un2Lbl.Text = _anonActive2 and "@•••••••" or _realUN2 end
+                            _setEyeIcon2(_anonActive2)
+                        end)
+                    end
+                end
                 if t.UserInfoColor then
                     local _accentFrame = _bot:FindFirstChildWhichIsA("Frame")
                     if _accentFrame then
@@ -3899,7 +4223,7 @@ local aa = {
             local v =
                 e(
                 "Frame",
-                {BackgroundTransparency = 1, Size = UDim2.fromOffset(170, 300), Parent = h.Library.GUI, Visible = false},
+                {BackgroundTransparency = 1, Size = UDim2.fromOffset(170, 300), Parent = h.Library.PopupGUI or h.Library.GUI, Visible = false},
                 {u, e("UISizeConstraint", {MinSize = Vector2.new(170, 0)})}
             )
             table.insert(k.OpenFrames, v)
@@ -4013,7 +4337,7 @@ local aa = {
             
             function l.BuildDropdownList(B)
                 local C, D = l.Values, {}
-                l.Buttons = {} -- clear stale refs
+                l.Buttons = {}
                 for E, F in next, t:GetChildren() do
                     if not F:IsA "UIListLayout" then
                         F:Destroy()
@@ -4910,7 +5234,7 @@ local aa = {
                 if _mm then return _mm:Video(src) end
                 return ""
             end
-            local _isHttp = false -- HTTP URL video disabled (not supported by Roblox VideoFrame)
+            local _isHttp = false
             local _syncResolved = _resolveSync(_src)
             local _hasVideo = _syncResolved ~= ""
             local u = ac(af.Creator).New
@@ -5013,7 +5337,6 @@ local aa = {
                 end)
                 _pauseBtn.Visible = false
                 _stopBtn = _ctrlBtn("solar/stop-bold", function()
-                    -- Restart confirm dialog
                     local _win = d.Library and d.Library.Window
                     if _win then
                         _win:Dialog({
@@ -5052,7 +5375,6 @@ local aa = {
                 end
                 _vid.DidLoop:Connect(function() end)
             end
-            -- VIDEO seek bar (below video, visible on hover)
             local _vidSeekRow = u("Frame",{
                 Size=UDim2.new(1,0,0,22),
                 Position=UDim2.new(0,0,1,0),
@@ -5459,7 +5781,6 @@ local aa = {
                     _vid.Video = r
                     _placeholder.Visible = false
                 elseif type(src)=="string" and src:match("^https?://") then
-                    -- HTTP URL not supported by Roblox VideoFrame, skip silently
                     _placeholder.Visible = true
                 else
                     _placeholder.Visible = true
@@ -5620,7 +5941,6 @@ local aa = {
             local _snd = nil
             local _playOutside = (_opts.PlayOutsideWindow == true)
             if _hasAudio then
-                -- Destroy any duplicate BFAudio sounds to prevent double-audio bug
                 local _sndSvc = game:GetService("SoundService")
                 for _, _ex in ipairs(_sndSvc:GetChildren()) do
                     if _ex:IsA("Sound") and _ex.Name == "BFAudio" and _ex.SoundId == _resolved then
@@ -5634,10 +5954,9 @@ local aa = {
                 end
                 _snd = Instance.new("Sound")
                 _snd.Name    = "BFAudio"
-                _snd.SoundId = _resolved
+                pcall(function() _snd.SoundId = _resolved end)
                 _snd.Volume  = _vol
                 _snd.Looped  = _looped
-                -- PlayOutsideWindow: parent to SoundService so audio persists even if GUI minimized
                 if _playOutside then
                     _snd.RollOffMaxDistance = 10000
                     _snd.Parent = game:GetService("SoundService")
@@ -5747,7 +6066,7 @@ local aa = {
             local _outsideIcImg
             if _hasAudio and _snd then
                 _playBtn  = _ctrlBtn("solar/play-bold", function()
-                    _snd:Play(); _playing=true
+                    pcall(function() _snd:Play() end); _playing=true
                     if _playBtn  then _playBtn.Visible=false end
                     if _pauseBtn then _pauseBtn.Visible=true  end
                 end)
@@ -5793,7 +6112,7 @@ local aa = {
                         else
                             _snd.Parent = workspace
                         end
-                        if wasPlaying then pcall(function() _snd:Play() end) end
+                        if wasPlaying then pcall(function() pcall(function() _snd:Play() end) end) end
                     end
                     local _lib = d.Library
                     if _lib then _lib:Notify({Title="Audio", Content=_playOutside and "Play Outside Window: ON" or "Play Outside Window: OFF", Type="Info", Duration=2}) end
@@ -5801,7 +6120,7 @@ local aa = {
                 _outsideIcImg = _outsideIc2
                 _applyAudioIcon(_outsideIcImg, _playOutside and "solar/export-bold" or "solar/import-bold")
                 if _auto then
-                    _snd:Play(); _playing=true
+                    pcall(function() _snd:Play() end); _playing=true
                     if _playBtn  then _playBtn.Visible=false end
                     if _pauseBtn then _pauseBtn.Visible=true  end
                 end
@@ -5922,7 +6241,7 @@ local aa = {
                 end)
             end
             local _mod = {Frame=_wrap, Type="Audio", Sound=_snd}
-            function _mod:Play()   if _snd then pcall(function() _snd:Play()  end) end end
+            function _mod:Play()   if _snd then pcall(function() pcall(function() _snd:Play() end)  end) end end
             function _mod:Pause()  if _snd then pcall(function() _snd:Pause() end) end end
             function _mod:Stop()   if _snd then pcall(function() _snd:Stop()  end) end end
             function _mod:SetVolume(v)
@@ -5932,7 +6251,7 @@ local aa = {
                 local r = _resolve(src)
                 if _snd then
                     pcall(function() _snd:Stop() end)
-                    _snd.SoundId = r
+                    pcall(function() _snd.SoundId = r end)
                 else
                     _snd = Instance.new("Sound")
                     _snd.Name    = "BFAudio"
@@ -5970,7 +6289,7 @@ local aa = {
                         _snd.Parent = workspace
                     end
                     if wasPlaying then
-                        pcall(function() _snd:Play() end)
+                        pcall(function() pcall(function() _snd:Play() end) end)
                     end
                 end
             end
