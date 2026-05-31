@@ -1,4 +1,4 @@
-function DFunctions.CreateButton(ButtonName, Name, Size1, Size2, ScriptLogic, CircleMode)
+Local function DFunctions.CreateButton(ButtonName, Name, Size1, Size2, ScriptLogic, CircleMode)
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = ButtonName
     screenGui.Parent = LocalPlayer.PlayerGui
