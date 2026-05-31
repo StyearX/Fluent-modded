@@ -1,11 +1,7 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
-
-if not LocalPlayer then
-    repeat task.wait() until Players.LocalPlayer
-    LocalPlayer = Players.LocalPlayer
-end
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local function CreateButton(ButtonName, Name, Size1, Size2, ScriptLogic, CircleMode)
     local screenGui = Instance.new("ScreenGui")
@@ -188,4 +184,4 @@ local function CreateButton(ButtonName, Name, Size1, Size2, ScriptLogic, CircleM
     return button
 end
 
-CreateButton("Text", "Text", 0.16, 0.12, nil, false)
+CreateButton("", "", 0.16, 0.12, nil, false)
