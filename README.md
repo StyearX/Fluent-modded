@@ -94,6 +94,9 @@ All icon packs are loaded on demand. Use the `prefix/icon-name` format anywhere 
 | Craft | `craft/` | https://github.com/StyearX/Icons/tree/main/craft |
 | Geist | `geist/` | https://github.com/StyearX/Icons/tree/main/geist |
 | SF Symbols | `sfsymbols/` | https://github.com/StyearX/Icons/tree/main/sfsymbols |
+| Heroicons | `hero/` | https://github.com/StyearX/Icons/blob/main/hero |
+| Google Material Icons| `gmi/` | https://github.com/StyearX/Icons/blob/main/GoogleMaterialIcons |
+
 
 ```lua
 -- Usage example
@@ -122,6 +125,11 @@ SaveManager:LoadAutoloadConfig()
 ---
 
 ## Changelog
+## v1.4.0 Overhaul 
+- Add DropdownOutisideWindow
+- Fix Floating Button manager ( Because Floating Button manager changes Ui corner)
+- Completely change the original code like Element whose code is refined and simplified but still maintains function and ui
+
 
 ### v1.3.0
 - Remove language system (broken)
