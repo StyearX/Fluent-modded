@@ -3,7 +3,7 @@ local Themes = {
 		"AshGray",
 		"Charcoal",
 		"PearlWhite",
-		"Aqua",
+		"NeonPurple",
 		"DeepViolet",
 		"BloodRed",
 	},
