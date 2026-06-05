@@ -82,9 +82,9 @@ function Audio:New(_, config)
 			Parent        = btnHolder,
 		})
 
-		local playBtn  = ctrlBtn("▶ Play",  function() sound:Play()  end); playBtn.Parent  = btnHolder
-		local pauseBtn = ctrlBtn("⏸ Pause", function() sound:Pause() end); pauseBtn.Parent = btnHolder
-		local stopBtn  = ctrlBtn("⏹ Stop",  function() sound:Stop()  end); stopBtn.Parent  = btnHolder
+		local playBtn  = ctrlBtn(" Play",  function() sound:Play()  end); playBtn.Parent  = btnHolder
+		local pauseBtn = ctrlBtn(" Pause", function() sound:Pause() end); pauseBtn.Parent = btnHolder
+		local stopBtn  = ctrlBtn(" Stop",  function() sound:Stop()  end); stopBtn.Parent  = btnHolder
 
 		if auto then
 			task.spawn(function()
