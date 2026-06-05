@@ -1,84 +1,63 @@
-local Root = script.Parent.Parent
+local Root    = script.Parent.Parent
 local Creator = require(Root.Creator)
 
-local New = Creator.New
-local AddSignal = Creator.AddSignal
-local Components = Root.Components
+local Input = {}
+Input.__index = Input
+Input.__type  = "Input"
 
-local Element = {}
-Element.__index = Element
-Element.__type = "Input"
+function Input:New(idx, config)
+	assert(config.Title, "Input - Missing Title")
+	local lib = self.Library
 
-function Element:New(Idx, Config)
-	local Library = self.Library
-	assert(Config.Title, "Input - Missing Title")
-	Config.Callback = Config.Callback or function() end
-
-	local Input = {
-		Value = Config.Default or "",
-		Numeric = Config.Numeric or false,
-		Finished = Config.Finished or false,
-		Callback = Config.Callback or function(Value) end,
-		Type = "Input",
+	local h = {
+		Value    = config.Default  or "",
+		Numeric  = config.Numeric  or false,
+		Finished = config.Finished or false,
+		Callback = config.Callback or function() end,
+		Type     = "Input",
 	}
 
-	local InputFrame = require(Components.Element)(Config.Title, Config.Description, self.Container, false)
+	local el = require(Root.Components.Element)(config.Title, config.Description, self.Container, false)
+	h.SetTitle = el.SetTitle
+	h.SetDesc  = el.SetDesc
 
-	Input.SetTitle = InputFrame.SetTitle
-	Input.SetDesc = InputFrame.SetDesc
+	local tb = require(Root.Components.Textbox)(el.Frame, true)
+	tb.Frame.Position     = UDim2.new(1, -10, 0.5, 0)
+	tb.Frame.AnchorPoint  = Vector2.new(1, 0.5)
+	tb.Frame.Size         = UDim2.fromOffset(160, 30)
+	tb.Input.Text         = config.Default        or ""
+	tb.Input.PlaceholderText = config.Placeholder or ""
 
-	local Textbox = require(Components.Textbox)(InputFrame.Frame, true)
-	Textbox.Frame.Position = UDim2.new(1, -10, 0.5, 0)
-	Textbox.Frame.AnchorPoint = Vector2.new(1, 0.5)
-	Textbox.Frame.Size = UDim2.fromOffset(160, 30)
-	Textbox.Input.Text = Config.Default or ""
-	Textbox.Input.PlaceholderText = Config.Placeholder or ""
+	local box = tb.Input
 
-	local Box = Textbox.Input
-
-	function Input:SetValue(Text)
-		if Config.MaxLength and #Text > Config.MaxLength then
-			Text = Text:sub(1, Config.MaxLength)
-		end
-
-		if Input.Numeric then
-			if (not tonumber(Text)) and Text:len() > 0 then
-				Text = Input.Value
-			end
-		end
-
-		Input.Value = Text
-		Box.Text = Text
-
-		Library:SafeCallback(Input.Callback, Input.Value)
-		Library:SafeCallback(Input.Changed, Input.Value)
+	function h:SetValue(val)
+		if config.MaxLength and #val > config.MaxLength then val = val:sub(1, config.MaxLength) end
+		if h.Numeric and not tonumber(val) and #val > 0 then val = h.Value end
+		h.Value  = val
+		box.Text = val
+		lib:SafeCallback(h.Callback, val)
+		lib:SafeCallback(h.Changed,  val)
 	end
 
-	if Input.Finished then
-		AddSignal(Box.FocusLost, function(enter)
-			if not enter then
-				return
-			end
-			Input:SetValue(Box.Text)
+	function h:OnChanged(cb) h.Changed = cb; cb(h.Value) end
+
+	function h:Destroy()
+		el.Frame:Destroy()
+		lib.Options[idx] = nil
+	end
+
+	if h.Finished then
+		Creator.AddSignal(box.FocusLost, function(enter)
+			if enter then h:SetValue(box.Text) end
 		end)
 	else
-		AddSignal(Box:GetPropertyChangedSignal("Text"), function()
-			Input:SetValue(Box.Text)
+		Creator.AddSignal(box:GetPropertyChangedSignal("Text"), function()
+			h:SetValue(box.Text)
 		end)
 	end
 
-	function Input:OnChanged(Func)
-		Input.Changed = Func
-		Func(Input.Value)
-	end
-
-	function Input:Destroy()
-		InputFrame:Destroy()
-		Library.Options[Idx] = nil
-	end
-
-	Library.Options[Idx] = Input
-	return Input
+	lib.Options[idx] = h
+	return h
 end
 
-return Element
+return Input
