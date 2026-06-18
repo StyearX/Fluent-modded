@@ -1,3 +1,27 @@
+<p align="left">
+  <a href="https://github.com/StyearX/Fluent-modded/graphs/contributors">
+    <img alt="Contributors" src="https://img.shields.io/github/contributors/StyearX/Fluent-modded" />
+  </a>
+  <a href="https://github.com/StyearX/Fluent-modded/issues">
+    <img alt="Issues" src="https://img.shields.io/github/issues/StyearX/Fluent-modded?color=0088ff" />
+  </a>
+  <a href="https://github.com/StyearX/Fluent-modded/pulls">
+    <img alt="Pull Requests" src="https://img.shields.io/github/issues-pr/StyearX/Fluent-modded?color=0088ff" />
+  </a>
+  <a href="https://github.com/StyearX/Fluent-modded/stargazers">
+    <img alt="Stars" src="https://img.shields.io/github/stars/StyearX/Fluent-modded?style=flat" />
+  </a>
+  <a href="https://github.com/StyearX/Fluent-modded/network/members">
+    <img alt="Forks" src="https://img.shields.io/github/forks/StyearX/Fluent-modded?style=flat" />
+  </a>
+  <a href="https://github.com/StyearX/Fluent-modded">
+    <img alt="Last Commit" src="https://img.shields.io/github/last-commit/StyearX/Fluent-modded" />
+  </a>
+  <a href="https://github.com/StyearX/Fluent-modded">
+    <img alt="Repo Size" src="https://img.shields.io/github/repo-size/StyearX/Fluent-modded" />
+  </a>
+</p>
+
 <img src="Assets/asset.png#gh-dark-mode-only" alt="fluent">
 <img src="Assets/asset.png#gh-light-mode-only" alt="fluent">
 <img src="Assets/Theme 2.png" alt="fluent">
