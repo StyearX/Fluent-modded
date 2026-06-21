@@ -1107,9 +1107,9 @@ local aa = {
         local baseST = x.SetTheme
         function x.SetTheme(C, D)
             x.StopRGBMode()
-            if x.Window and table.find(x.Themes, D) then
-                x.Theme = D; p.UpdateTheme()
-                if D == "RGB" then x:StartRGBMode() end
+            baseST(C, D)
+            if D == "RGB" and x.Window and table.find(x.Themes, D) then
+                x:StartRGBMode()
             end
         end
 
@@ -3756,7 +3756,7 @@ local aa = {
                         return "smartphone", "lucide/smartphone"
                     end
                     if table.find({Enum.Platform.XBoxOne, Enum.Platform.PS4,
-                                   Enum.Platform.XBoxOne360, Enum.Platform.WiiU,
+                                   Enum.Platform.XBox360, Enum.Platform.WiiU,
                                    Enum.Platform.NX}, platform) then
                         return "console", "lucide/gamepad-2"
                     end
