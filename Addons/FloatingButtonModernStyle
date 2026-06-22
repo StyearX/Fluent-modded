@@ -1,4 +1,11 @@
-Local function DFunctions.CreateButton(ButtonName, Name, Size1, Size2, ScriptLogic, CircleMode)
+-- Make sure you load FluentPro first so that gradient strokes and other things work
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local function CreateButton(ButtonName, Name, Size1, Size2, ScriptLogic, CircleMode)
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = ButtonName
     screenGui.Parent = LocalPlayer.PlayerGui
@@ -161,3 +168,5 @@ Local function DFunctions.CreateButton(ButtonName, Name, Size1, Size2, ScriptLog
 
     return button
 end
+
+CreateButton("", "", 0.16, 0.12, nil, false)
