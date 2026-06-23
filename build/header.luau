@@ -1,9 +1,8 @@
 --[[
-    Fluent Interface Suite
-    This script is not intended to be modified.
+    FluentPro User interface 
     To view the source code, see the 'src' folder on GitHub!
 
-    Author: dawid
+    Author: dawid,Vraigos,StyearX
     License: MIT
-    GitHub: https://github.com/dawid-scripts/Fluent
+    GitHub: https://github.com/StyearX/Fluent-modded
 --]]
