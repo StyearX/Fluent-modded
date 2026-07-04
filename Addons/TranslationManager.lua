@@ -391,6 +391,8 @@ function TranslationManager:BuildTranslationSection(tab)
         Values = langNames,
         Default = currentName,
         Icon = "solar/global-bold",
+        DropdownOutsideWindow = true,
+        IsManagerDropdown = true,
         Callback = function(selectedName)
             local code = self:GetCodeFromName(selectedName)
             self:SetLanguage(code)
