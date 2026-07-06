@@ -5,6 +5,7 @@ SaveManager.Folder = "FluentSettings"
 SaveManager.Ignore = {}
 SaveManager.Parser = {
     Toggle     = { Save=function(idx,o) return{type="Toggle",idx=idx,value=o.Value} end, Load=function(idx,d) if SaveManager.Options[idx] then SaveManager.Options[idx]:SetValue(d.value) end end },
+    Checkbox   = { Save=function(idx,o) return{type="Checkbox",idx=idx,value=o.Value} end, Load=function(idx,d) if SaveManager.Options[idx] then SaveManager.Options[idx]:SetValue(d.value) end end },
     Slider     = { Save=function(idx,o) return{type="Slider",idx=idx,value=tostring(o.Value)} end, Load=function(idx,d) if SaveManager.Options[idx] then SaveManager.Options[idx]:SetValue(d.value) end end },
     Dropdown   = { Save=function(idx,o) return{type="Dropdown",idx=idx,value=o.Value,mutli=o.Multi} end, Load=function(idx,d) if SaveManager.Options[idx] then SaveManager.Options[idx]:SetValue(d.value) end end },
     Colorpicker= { Save=function(idx,o) return{type="Colorpicker",idx=idx,value=o.Value:ToHex(),transparency=o.Transparency} end, Load=function(idx,d) if SaveManager.Options[idx] then SaveManager.Options[idx]:SetValueRGB(Color3.fromHex(d.value),d.transparency) end end },
@@ -73,26 +74,66 @@ function SaveManager:BuildConfigSection(tab)
     local sec=tab:AddSection("Configuration","lucide/file-text")
     sec:AddInput("SaveManager_ConfigName",{Title="Config name",Icon="solar/pen-new-round-bold"})
     sec:AddDropdown("SaveManager_ConfigList",{Title="Config list",Values=self:RefreshConfigList(),AllowNull=true,NoSearch=true,Icon="solar/list-bold",DropdownOutsideWindow=true,IsManagerDropdown=true})
-    sec:AddButton({Title="Create config",Icon="solar/diskette-bold",Callback=function()
-        local name=SaveManager.Options.SaveManager_ConfigName.Value
-        if name:gsub(" ","")==="" then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Invalid name",Duration=7}) end
-        local ok,err=self:Save(name)
-        if not ok then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Failed: "..err,Duration=7}) end
-        self.Library:Notify({Title="Interface",Content="Config loader",SubContent=string.format("Created %q",name),Duration=7})
-        SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
-        SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
-    end})
     sec:AddButton({Title="Load config",Icon="solar/upload-minimalistic-bold",Callback=function()
         local name=SaveManager.Options.SaveManager_ConfigList.Value
         local ok,err=self:Load(name)
         if not ok then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Failed: "..err,Duration=7}) end
         self.Library:Notify({Title="Interface",Content="Config loader",SubContent=string.format("Loaded %q",name),Duration=7})
     end})
+    local function _doCreate(name)
+        local ok,err=self:Save(name)
+        if not ok then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Failed: "..err,Duration=7}) end
+        self.Library:Notify({Title="Interface",Content="Config loader",SubContent=string.format("Created %q",name),Duration=7})
+        SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
+        SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
+    end
+    sec:AddButton({Title="Create config",Icon="solar/diskette-bold",Callback=function()
+        local name=SaveManager.Options.SaveManager_ConfigName.Value
+        if name:gsub(" ","")=="" then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Invalid name",Duration=7}) end
+        local path=self.Folder.."/settings/"..name..".json"
+        local win=self.Library.Window
+        if isfile(path) and win then
+            win:Dialog({
+                Title="Overwrite config?",
+                Content=string.format("A config named %q already exists. Overwrite it?",name),
+                Buttons={
+                    {Title="Overwrite", Callback=function() _doCreate(name) end},
+                    {Title="Cancel"},
+                },
+            })
+            return
+        end
+        _doCreate(name)
+    end})
     sec:AddButton({Title="Overwrite config",Icon="solar/refresh-bold",Callback=function()
         local name=SaveManager.Options.SaveManager_ConfigList.Value
         local ok,err=self:Save(name)
         if not ok then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Failed: "..err,Duration=7}) end
         self.Library:Notify({Title="Interface",Content="Config loader",SubContent=string.format("Overwrote %q",name),Duration=7})
+    end})
+    sec:AddButton({Title="Delete config",Icon="solar/trash-bin-trash-bold",Callback=function()
+        local name=SaveManager.Options.SaveManager_ConfigList.Value
+        if not name or name=="" then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="No config selected",Duration=7}) end
+        local win=self.Library.Window
+        local function _doDelete()
+            local path=self.Folder.."/settings/"..name..".json"
+            if isfile(path) then delfile(path) end
+            self.Library:Notify({Title="Interface",Content="Config loader",SubContent=string.format("Deleted %q",name),Duration=7})
+            SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
+            SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
+        end
+        if win then
+            win:Dialog({
+                Title="Delete config?",
+                Content=string.format("Are you sure you want to permanently delete %q?",name),
+                Buttons={
+                    {Title="Delete", Callback=_doDelete},
+                    {Title="Cancel"},
+                },
+            })
+        else
+            _doDelete()
+        end
     end})
     sec:AddButton({Title="Refresh list",Icon="solar/restart-bold",Callback=function()
         SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())

@@ -93,39 +93,70 @@ function FloatingButtonManager:BuildConfigSection(tab)
     local section=tab:AddSection("Floating Buttons Config","lucide/file-type-corner")
     section:AddInput("FB_ConfigName",{Title="Layout name",Icon="solar/widget-bold",Placeholder="Enter name..."})
     section:AddDropdown("FB_ConfigList",{Title="Layouts list",Values=self:RefreshConfigList(),AllowNull=true,NoSearch=true,Icon="solar/list-bold",DropdownOutsideWindow=true,IsManagerDropdown=true})
-    section:AddButton({Title="Create layout",Icon="solar/diskette-bold",Callback=function()
-        local name=self.Library.Options.FB_ConfigName.Value
-        if not name or name:gsub(" ","")==="" then
-            return self.Library:Notify({Title="Floating Buttons",Content="Invalid layout name",Duration=5})
-        end
+    section:AddButton({Title="Load layout",Icon="solar/upload-minimalistic-bold",Callback=function()
+        local name=self.Library.Options.FB_ConfigList.Value
+        if not name or name=="" then return self.Library:Notify({Title="Floating Buttons",Content="No layout selected",Duration=5}) end
+        local ok,err=self:Load(name)
+        if not ok then return self.Library:Notify({Title="Floating Buttons",Content="Failed to load: "..tostring(err),Duration=5}) end
+        self.Library:Notify({Title="Floating Buttons",Content=string.format("Loaded layout %q",name),Duration=5})
+    end})
+    local function _doCreateFB(name)
         local ok,err=self:Save(name)
         if not ok then return self.Library:Notify({Title="Floating Buttons",Content="Failed to save: "..tostring(err),Duration=5}) end
         self.Library:Notify({Title="Floating Buttons",Content=string.format("Saved layout %q",name),Duration=5})
         self.Library.Options.FB_ConfigList:SetValues(self:RefreshConfigList())
         self.Library.Options.FB_ConfigList:SetValue(nil)
-    end})
-    section:AddButton({Title="Load layout",Icon="solar/upload-minimalistic-bold",Callback=function()
-        local name=self.Library.Options.FB_ConfigList.Value
-        if not name or name==="" then return self.Library:Notify({Title="Floating Buttons",Content="No layout selected",Duration=5}) end
-        local ok,err=self:Load(name)
-        if not ok then return self.Library:Notify({Title="Floating Buttons",Content="Failed to load: "..tostring(err),Duration=5}) end
-        self.Library:Notify({Title="Floating Buttons",Content=string.format("Loaded layout %q",name),Duration=5})
+    end
+    section:AddButton({Title="Create layout",Icon="solar/diskette-bold",Callback=function()
+        local name=self.Library.Options.FB_ConfigName.Value
+        if not name or name:gsub(" ","")=="" then
+            return self.Library:Notify({Title="Floating Buttons",Content="Invalid layout name",Duration=5})
+        end
+        local path=self.Folder.."/settings/"..name..".json"
+        local win=self.Library.Window
+        if isfile(path) and win then
+            win:Dialog({
+                Title="Overwrite layout?",
+                Content=string.format("A layout named %q already exists. Overwrite it?",name),
+                Buttons={
+                    {Title="Overwrite", Callback=function() _doCreateFB(name) end},
+                    {Title="Cancel"},
+                },
+            })
+            return
+        end
+        _doCreateFB(name)
     end})
     section:AddButton({Title="Overwrite layout",Icon="solar/refresh-bold",Callback=function()
         local name=self.Library.Options.FB_ConfigList.Value
-        if not name or name==="" then return self.Library:Notify({Title="Floating Buttons",Content="No layout selected",Duration=5}) end
+        if not name or name=="" then return self.Library:Notify({Title="Floating Buttons",Content="No layout selected",Duration=5}) end
         local ok,err=self:Save(name)
         if not ok then return self.Library:Notify({Title="Floating Buttons",Content="Failed to overwrite: "..tostring(err),Duration=5}) end
         self.Library:Notify({Title="Floating Buttons",Content=string.format("Overwrote layout %q",name),Duration=5})
     end})
     section:AddButton({Title="Delete layout",Icon="solar/close-circle-bold",Callback=function()
         local name=self.Library.Options.FB_ConfigList.Value
-        if not name or name==="" then return self.Library:Notify({Title="Floating Buttons",Content="No layout selected",Duration=5}) end
-        local path=self.Folder.."/settings/"..name..".json"
-        if isfile(path) then delfile(path) end
-        self.Library:Notify({Title="Floating Buttons",Content=string.format("Deleted layout %q",name),Duration=5})
-        self.Library.Options.FB_ConfigList:SetValues(self:RefreshConfigList())
-        self.Library.Options.FB_ConfigList:SetValue(nil)
+        if not name or name=="" then return self.Library:Notify({Title="Floating Buttons",Content="No layout selected",Duration=5}) end
+        local win=self.Library.Window
+        local function _doDeleteFB()
+            local path=self.Folder.."/settings/"..name..".json"
+            if isfile(path) then delfile(path) end
+            self.Library:Notify({Title="Floating Buttons",Content=string.format("Deleted layout %q",name),Duration=5})
+            self.Library.Options.FB_ConfigList:SetValues(self:RefreshConfigList())
+            self.Library.Options.FB_ConfigList:SetValue(nil)
+        end
+        if win then
+            win:Dialog({
+                Title="Delete layout?",
+                Content=string.format("Are you sure you want to permanently delete %q?",name),
+                Buttons={
+                    {Title="Delete", Callback=_doDeleteFB},
+                    {Title="Cancel"},
+                },
+            })
+        else
+            _doDeleteFB()
+        end
     end})
     section:AddButton({Title="Refresh list",Icon="solar/restart-bold",Callback=function()
         self.Library.Options.FB_ConfigList:SetValues(self:RefreshConfigList())
@@ -140,7 +171,7 @@ function FloatingButtonManager:BuildConfigSection(tab)
             AutoloadButton:SetDesc("Current autoload layout: none")
             self.Library:Notify({Title="Floating Buttons",Content="Autoload disabled",Duration=5})
         else
-            if not name or name==="" then return self.Library:Notify({Title="Floating Buttons",Content="No layout selected",Duration=5}) end
+            if not name or name=="" then return self.Library:Notify({Title="Floating Buttons",Content="No layout selected",Duration=5}) end
             writefile(autoPath,name)
             AutoloadButton:SetDesc("Current autoload layout: "..name)
             self.Library:Notify({Title="Floating Buttons",Content=string.format("Set %q to autoload",name),Duration=5})
