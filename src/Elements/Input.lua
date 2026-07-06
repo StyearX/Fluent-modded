@@ -20,6 +20,7 @@ function Input:New(idx, config)
 	local el = require(Root.Components.Element)(config.Title, config.Description, self.Container, false)
 	h.SetTitle = el.SetTitle
 	h.SetDesc  = el.SetDesc
+	h.Frame    = el.Frame
 
 	local tb = require(Root.Components.Textbox)(el.Frame, true)
 	tb.Frame.Position     = UDim2.new(1, -10, 0.5, 0)

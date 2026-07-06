@@ -21,6 +21,7 @@ function Toggle:New(idx, config)
 	el.DescLabel.Size = UDim2.new(1, -54, 0, 14)
 	t.SetTitle = el.SetTitle
 	t.SetDesc  = el.SetDesc
+	t.Frame    = el.Frame
 
 	local knob = New("ImageLabel", {
 		AnchorPoint      = Vector2.new(0, 0.5),

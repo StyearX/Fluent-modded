@@ -24,6 +24,7 @@ function Keybind:New(idx, config)
 	local el = require(Root.Components.Element)(config.Title, config.Description, self.Container, true)
 	k.SetTitle = el.SetTitle
 	k.SetDesc  = el.SetDesc
+	k.Frame    = el.Frame
 
 	local keyLabel = New("TextLabel", {
 		FontFace         = Font.new("rbxasset://fonts/families/GothamSSm.json"),

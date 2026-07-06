@@ -7,7 +7,8 @@ Paragraph.__index = Paragraph
 Paragraph.__type  = "Paragraph"
 
 function Paragraph:New(_, config)
-	assert(config.Title, "Paragraph - Missing Title")
+	config = config or {}
+	config.Title = config.Title or ""
 	config.Content = config.Content or ""
 	local el = require(Root.Components.Element)(config.Title, config.Content, self.Container, false)
 	el.Frame.BackgroundTransparency = 0.92

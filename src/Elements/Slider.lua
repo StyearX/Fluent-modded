@@ -28,6 +28,7 @@ function Slider:New(idx, config)
 	el.DescLabel.Size = UDim2.new(1, -170, 0, 14)
 	s.SetTitle = el.SetTitle
 	s.SetDesc  = el.SetDesc
+	s.Frame    = el.Frame
 
 	local knob = New("ImageLabel", {
 		AnchorPoint = Vector2.new(0, 0.5),

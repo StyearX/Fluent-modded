@@ -25,6 +25,7 @@ function Dropdown:New(idx, config)
 		Callback = config.Callback or function() end,
 		SetTitle = el.SetTitle,
 		SetDesc  = el.SetDesc,
+		Frame    = el.Frame,
 	}
 	if d.Multi and type(d.Value) ~= "table" then
 		d.Value = {}
