@@ -54,6 +54,16 @@ return function(Config)
 		Size = UDim2.fromOffset(20, 20),
 		BackgroundTransparency = 1,
 		Position = UDim2.new(1, -20, 1, -20),
+	}, {
+		New("ImageLabel", {
+			Size = UDim2.fromOffset(16, 16),
+			Position = UDim2.new(1, -2, 1, -2),
+			AnchorPoint = Vector2.new(1, 1),
+			BackgroundTransparency = 1,
+			Image = "rbxassetid://10734898934",
+			ImageTransparency = 0.1,
+			ThemeTag = { ImageColor3 = "SubText" },
+		}),
 	})
 
 	Window.TabHolder = New("ScrollingFrame", {
