@@ -1,4 +1,4 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-modded/releases/download/1.4.6/FluentPro"))()
+local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-modded/releases/download/1.5.1/FluentPro"))()
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -31,13 +31,13 @@ local function CreateButton(ButtonName, Name, Size1, Size2, ScriptLogic, CircleM
     frame.Parent = screenGui
 
     local gradient = Instance.new("UIGradient")
-    gradient.Color = getgenv().ButtonGradients.Background
+    gradient.Color = ButtonGradients.Background
     gradient.Parent = frame
     task.spawn(function()
         while task.wait(0.03) do
             if not frame.Parent then break end
             gradient.Rotation = (gradient.Rotation + 1) % 360
-            gradient.Color = getgenv().ButtonGradients.Background
+            gradient.Color = ButtonGradients.Background
         end
     end)
 
@@ -47,13 +47,13 @@ local function CreateButton(ButtonName, Name, Size1, Size2, ScriptLogic, CircleM
     stroke.Color = Color3.new(1, 1, 1)
     stroke.Parent = frame
     local gradientstroke = Instance.new("UIGradient")
-    gradientstroke.Color = getgenv().ButtonGradients.Stroke
+    gradientstroke.Color = ButtonGradients.Stroke
     gradientstroke.Rotation = 0
     gradientstroke.Parent = stroke
     task.spawn(function()
         while frame.Parent do
             gradientstroke.Rotation = (gradientstroke.Rotation + 0.5) % 360
-            gradientstroke.Color = getgenv().ButtonGradients.Stroke
+            gradientstroke.Color = ButtonGradients.Stroke
             task.wait()
         end
     end)
@@ -469,7 +469,7 @@ Fluent:RegisterCustomTheme("SlateAnimated", {
 local Window = Fluent:CreateWindow({
     Title = "FluentPro",
     SubTitle = "Full docs",
-    Version = "Beta 1.4.6",
+    Version = "release 1.5.1",
     TabWidth = 130,
     Size = UDim2.fromOffset(480, 460),
     Acrylic = true,
@@ -506,7 +506,7 @@ local secChangelog = Tabs.Elements:AddSection("Changelog", "solar/history-bold")
 
 secChangelog:AddParagraph({
     Title = "Latest Update",
-    Content = "Fix Layout Order Glitch\nAdd Social Element\nAdd 2 New Theme\nRemove Device detector\nAdd Rich Text System\nBring Back Gold Theme\nSmall Bug Fix",
+    Content = "• Add 2 New Element (Checkbox And Progress Bar\n• Fix CanvasGroup Scrollbar\n• Fix Input dialog\n• Fix collision between a window and another window",
 })
 
 local secToggle = Tabs.Elements:AddSection("Toggle", "solar/toggle-on-circle-bold")
@@ -540,6 +540,30 @@ secToggle:AddToggle("HighJump", {
 })
 
 secToggle:AddDivider()
+
+local secCheckbox = Tabs.Elements:AddSection("Checkbox", "solar/check-square-bold")
+
+secCheckbox:AddCheckbox("AutoFarm", {
+    Title = "Auto Farm",
+    Icon = "solar/leaf-bold",
+    Default = false,
+    Description = "Simple on/off checkbox, saveable just like Toggle",
+    Callback = function(v)
+        Notify("Auto Farm", v and "Enabled" or "Disabled", v and "Success" or "Info", "solar/leaf-bold")
+    end,
+})
+
+secCheckbox:AddCheckbox("GodMode", {
+    Title = "God Mode",
+    Icon = "solar/shield-star-bold",
+    Default = false,
+    Description = "Another checkbox example",
+    Callback = function(v)
+        Notify("God Mode", v and "Enabled" or "Disabled", v and "Success" or "Info", "solar/shield-star-bold")
+    end,
+})
+
+secCheckbox:AddDivider()
 
 local secSlider = Tabs.Elements:AddSection("Slider", "solar/slider-horizontal-bold")
 
@@ -575,6 +599,32 @@ secSlider:AddSlider("Volume", {
 })
 
 secSlider:AddDivider()
+
+local secProgress = Tabs.Elements:AddSection("Progress Bar", "solar/graph-new-bold")
+
+local xpBar = secProgress:AddProgressBar("XPBar", {
+    Title = "XP Progress",
+    Min = 0, Max = 100, Default = 35,
+})
+
+secProgress:AddButton({
+    Title = "Simulate +15 XP",
+    Icon = "solar/graph-new-bold",
+    Callback = function()
+        xpBar:SetValue(math.min(xpBar.Value + 15, xpBar.Max))
+        Notify("XP Progress", string.format("Now at %d / %d", xpBar.Value, xpBar.Max), "Success", nil, 3)
+    end,
+})
+
+secProgress:AddButton({
+    Title = "Reset",
+    Icon = "solar/restart-bold",
+    Callback = function()
+        xpBar:SetValue(0)
+    end,
+})
+
+secProgress:AddDivider()
 
 local secButton = Tabs.Elements:AddSection("Button", "solar/cursor-bold")
 
@@ -1180,6 +1230,35 @@ secDialog:AddButton({
     end,
 })
 
+secDialog:AddButton({
+    Title = "Key System Example",
+    Icon = "solar/key-bold",
+    Description = "Real-world pattern: gate access behind a key using Dialog + Input",
+    Callback = function()
+        local VALID_KEY = "FLUENTPRO-2026"
+        local function askForKey()
+            Window:Dialog({
+                Title = "Key Required",
+                Content = "Enter your key to unlock this script. Get a key from the Discord.",
+                Input = { Placeholder = "Paste your key here..." },
+                Buttons = {
+                    { Title = "Submit", Callback = function(key)
+                        key = tostring(key or ""):gsub("^%s+", ""):gsub("%s+$", "")
+                        if key == VALID_KEY then
+                            Notify("Key System", "Key accepted, unlocked!", "Success", "solar/lock-keyhole-unlocked-bold", 4)
+                        else
+                            Notify("Key System", "Invalid key, try again", "Error", "solar/lock-keyhole-bold", 4)
+                            askForKey()
+                        end
+                    end },
+                    { Title = "Cancel" },
+                },
+            })
+        end
+        askForKey()
+    end,
+})
+
 secDialog:AddDivider()
 
 local secTheme = Tabs.Components:AddSection("Builtin Themes", "solar/palette-bold")
@@ -1284,6 +1363,25 @@ secFont:AddButton({
 })
 
 secFont:AddDivider()
+
+local secRichText = Tabs.Components:AddSection("Rich Text", "solar/text-bold")
+
+secRichText:AddParagraph({
+    Title = "Rich Text Is On By Default",
+    Content = "Every text label in FluentPro renders <b>Roblox rich text</b> tags automatically no setup needed. That means <i>italics</i>, <u>underline</u>, <s>strikethrough</s>, and even nested combos like <b><i>bold italic</i></b> just work in any Title, Description, or Paragraph Content.",
+})
+
+secRichText:AddParagraph({
+    Title = "<font color=\"rgb(255,120,120)\">Colored</font> <font color=\"rgb(120,200,255)\">Titles</font>",
+    Content = "You can color individual words with <font color=\"rgb(255,200,90)\">&lt;font color=\"rgb(r,g,b)\"&gt;</font> tags, mix sizes with <font size=\"22\">size=\"22\"</font>, or point at a custom font family with <font face=\"rbxasset://fonts/families/GothamSSm.json\">face=\"...\"</font>.",
+})
+
+secRichText:AddCode({
+    Title = "Example",
+    Code = 'sec:AddParagraph({\n    Title = "<b>Loot Drop</b>",\n    Content = "You found a <font color=\\"rgb(255,200,90)\\">Legendary</font> item!",\n})',
+})
+
+secRichText:AddDivider()
 
 local secIconInfo = Tabs.Icons:AddSection("Icon System", "solar/info-circle-bold")
 
