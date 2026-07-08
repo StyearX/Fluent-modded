@@ -111,16 +111,15 @@ local a, b = {
 local Animation
 do
     local _RunService = game:GetService("RunService")
-    local _conn
-    local _gradients = {}
-    local _strokes = {}
+    local _state = setmetatable({}, {__mode = "k"})
     Animation = {}
-    function Animation.Apply(theme, root)
-        if _conn then pcall(function() _conn:Disconnect() end) end
-        _conn = nil
-        table.clear(_gradients)
-        table.clear(_strokes)
-        if not theme or not root or not getgenv().ShineEnabled or not theme.ShineEnabled or not theme.Shine then return end
+    function Animation.Apply(theme, root, shineEnabled)
+        if not root then return end
+        local st = _state[root]
+        if st and st.conn then pcall(function() st.conn:Disconnect() end) end
+        st = {conn = nil, gradients = {}, strokes = {}}
+        _state[root] = st
+        if not theme or not shineEnabled or not theme.ShineEnabled or not theme.Shine then return end
         local ShineConfig   = theme.Shine
         local Speed         = ShineConfig.Speed         or 0.5
         local RotationSpeed = ShineConfig.RotationSpeed or 25
@@ -128,6 +127,7 @@ do
         local StrokeShineOn = theme.StrokeShine
         local StrokeFrom    = theme.StrokeDark or theme.AcrylicBorder
         local StrokeTo      = theme.Accent
+        local _gradients, _strokes = st.gradients, st.strokes
         for _, obj in ipairs(root:GetDescendants()) do
             if obj:IsA("UIGradient") then
                 table.insert(_gradients, obj)
@@ -136,7 +136,7 @@ do
             end
         end
         if #_gradients == 0 and #_strokes == 0 then return end
-        _conn = _RunService.RenderStepped:Connect(function(dt)
+        st.conn = _RunService.RenderStepped:Connect(function(dt)
             for i = #_gradients, 1, -1 do
                 local obj = _gradients[i]
                 if obj.Parent then
@@ -167,21 +167,6 @@ do
     end
 end
 if not Animation then Animation = {Apply = function() end} end
-getgenv().ShineEnabled = getgenv().ShineEnabled ~= nil and getgenv().ShineEnabled or true
-getgenv().WindowTransparent = getgenv().WindowTransparent or false
-getgenv()._FluentProRefreshOpenDropdownShine = nil
-getgenv()._FluentProManagerDropdowns = {}
-getgenv().ButtonGradients = {
-    Background = ColorSequence.new {
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(7, 42, 82)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(12, 76, 142)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(21, 97, 181))
-    },
-    Stroke = ColorSequence.new {
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 120, 200)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 40, 80))
-    }
-}
 
 local aa = {
     function()
@@ -199,13 +184,13 @@ local aa = {
                 end
         local w = u("ScreenGui", {Parent = i:IsStudio() and j.PlayerGui or game:GetService "CoreGui"})
         v(w)
-        local sw = u("ScreenGui", {Parent = i:IsStudio() and j.PlayerGui or game:GetService "CoreGui", DisplayOrder = 999999, ZIndexBehavior = Enum.ZIndexBehavior.Sibling})
+        local sw = u("ScreenGui", {Parent = i:IsStudio() and j.PlayerGui or game:GetService "CoreGui", DisplayOrder = 1, ZIndexBehavior = Enum.ZIndexBehavior.Sibling})
         v(sw)
         local nw = u("ScreenGui", {Parent = i:IsStudio() and j.PlayerGui or game:GetService "CoreGui", DisplayOrder = 999999, ZIndexBehavior = Enum.ZIndexBehavior.Sibling})
         v(nw)
         t:Init(nw)
         local x = {
-            Version = "1.4.6",
+            Version = "1.5.1",
             Name = "FluentPro",
             OpenFrames = {},
             Options = {},
@@ -225,6 +210,19 @@ local aa = {
             ScrollGUI = sw,
             PopupGUI = nw,
             ErrorHandler = nil,
+            ShineEnabled = true,
+            WindowTransparent = false,
+            ButtonGradients = {
+                Background = ColorSequence.new {
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(7, 42, 82)),
+                    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(12, 76, 142)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(21, 97, 181))
+                },
+                Stroke = ColorSequence.new {
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 120, 200)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 40, 80))
+                }
+            },
         }
         function x.SetErrorHandler(y, z)
             x.ErrorHandler = z
@@ -911,6 +909,169 @@ local aa = {
 
                 x.Elements = z
 
+        z["AddCheckbox"] = function(C, D, E)
+            local idx = (type(D) == "string") and D or nil
+            local f = (idx and E) or (type(D) == "table" and D) or {}
+            assert(f.Title, "Checkbox - Missing Title")
+            local parent = C.Container
+            if not parent then return end
+            local u = p.New
+            local h = {
+                Value = f.Default and true or false,
+                Callback = f.Callback or function() end,
+                Type = "Checkbox",
+            }
+            local wrap = u("Frame",{
+                Size=UDim2.new(1,0,0,38),
+                BackgroundTransparency=0.9,
+                BorderSizePixel=0,
+                Parent=parent,
+                ThemeTag={BackgroundColor3="Element"},
+            })
+            u("UICorner",{CornerRadius=UDim.new(0,8),Parent=wrap})
+            u("UIStroke",{Transparency=0.5,Thickness=1,ThemeTag={Color="InElementBorder"},Parent=wrap})
+            h.Frame = wrap
+
+            local titleLbl = u("TextLabel",{
+                FontFace=Font.new("rbxasset://fonts/families/GothamSSm.json",Enum.FontWeight.Medium),
+                Text=tostring(f.Title or ""),
+                TextSize=14,
+                TextXAlignment=Enum.TextXAlignment.Left,
+                TextTruncate=Enum.TextTruncate.AtEnd,
+                BackgroundTransparency=1,
+                Size=UDim2.new(1,-56,1,0),
+                Position=UDim2.new(0,12,0,0),
+                ThemeTag={TextColor3="Text"},
+                Parent=wrap,
+            })
+            local box = u("Frame",{
+                Size=UDim2.fromOffset(20,20),
+                AnchorPoint=Vector2.new(1,0.5),
+                Position=UDim2.new(1,-12,0.5,0),
+                BackgroundTransparency=0,
+                Parent=wrap,
+                ThemeTag={BackgroundColor3="CheckboxUnchecked"},
+            })
+            u("UICorner",{CornerRadius=UDim.new(0,5),Parent=box})
+            local boxStroke = u("UIStroke",{Transparency=0.4,Thickness=1.4,ThemeTag={Color="CheckboxChecked"},Parent=box})
+            local check = u("ImageLabel",{
+                Size=UDim2.fromOffset(14,14),
+                AnchorPoint=Vector2.new(0.5,0.5),
+                Position=UDim2.new(0.5,0,0.5,0),
+                BackgroundTransparency=1,
+                Image="rbxassetid://10709790644",
+                ImageTransparency=1,
+                ThemeTag={ImageColor3="CheckboxCheck"},
+                Parent=box,
+            })
+
+            function h:SetTitle(s) titleLbl.Text = tostring(s or "") end
+            function h.OnChanged(_, cb) h.Changed = cb; cb(h.Value) end
+            function h:SetValue(val)
+                val = not (not val)
+                h.Value = val
+                local tw = game:GetService("TweenService")
+                tw:Create(box, TweenInfo.new(0.18,Enum.EasingStyle.Quint,Enum.EasingDirection.Out), {BackgroundTransparency = val and 0 or 0}):Play()
+                p.OverrideTag(box, {BackgroundColor3 = val and "CheckboxChecked" or "CheckboxUnchecked"})
+                p.OverrideTag(boxStroke, {Color = val and "CheckboxChecked" or "CheckboxUnchecked"})
+                check.ImageTransparency = val and 0 or 1
+                x:SafeCallback(h.Callback, val)
+                x:SafeCallback(h.Changed, val)
+            end
+            function h:Destroy()
+                wrap:Destroy()
+                if idx then x.Options[idx] = nil end
+            end
+            wrap.InputBegan:Connect(function(inp)
+                if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
+                    h:SetValue(not h.Value)
+                end
+            end)
+            h:SetValue(h.Value)
+            if idx then x.Options[idx] = h end
+            return _addElementToSection(C, h)
+        end
+
+        z["AddProgressBar"] = function(C, D, E)
+            local idx = (type(D) == "string") and D or nil
+            local f = (idx and E) or (type(D) == "table" and D) or {}
+            local parent = C.Container
+            if not parent then return end
+            local u = p.New
+            local minV, maxV = f.Min or 0, f.Max or 100
+            local h = {
+                Value = math.clamp(f.Default or minV, minV, maxV),
+                Min = minV, Max = maxV,
+                Type = "ProgressBar",
+            }
+            local wrap = u("Frame",{
+                Size=UDim2.new(1,0,0,f.Title and 46 or 26),
+                BackgroundTransparency=1,
+                Parent=parent,
+            })
+            h.Frame = wrap
+            local titleLbl
+            if f.Title then
+                titleLbl = u("TextLabel",{
+                    FontFace=Font.new("rbxasset://fonts/families/GothamSSm.json",Enum.FontWeight.Medium),
+                    Text=tostring(f.Title or ""),
+                    TextSize=14,
+                    TextXAlignment=Enum.TextXAlignment.Left,
+                    BackgroundTransparency=1,
+                    Size=UDim2.new(1,-50,0,16),
+                    Position=UDim2.new(0,0,0,0),
+                    ThemeTag={TextColor3="Text"},
+                    Parent=wrap,
+                })
+            end
+            local pctLbl
+            if f.ShowPercent ~= false then
+                pctLbl = u("TextLabel",{
+                    FontFace=Font.new("rbxasset://fonts/families/GothamSSm.json"),
+                    Text="0%",
+                    TextSize=13,
+                    TextXAlignment=Enum.TextXAlignment.Right,
+                    BackgroundTransparency=1,
+                    Size=UDim2.new(0,50,0,16),
+                    Position=UDim2.new(1,-50,0,0),
+                    ThemeTag={TextColor3="SubText"},
+                    Parent=wrap,
+                })
+            end
+            local rail = u("Frame",{
+                Size=UDim2.new(1,0,0,8),
+                Position=UDim2.new(0,0,1,-8),
+                BackgroundTransparency=0.4,
+                Parent=wrap,
+                ThemeTag={BackgroundColor3="ProgressBarRail"},
+            })
+            u("UICorner",{CornerRadius=UDim.new(1,0),Parent=rail})
+            local fill = u("Frame",{
+                Size=UDim2.fromScale(0,1),
+                BackgroundTransparency=0,
+                Parent=rail,
+                ThemeTag={BackgroundColor3="ProgressBarFill"},
+            })
+            u("UICorner",{CornerRadius=UDim.new(1,0),Parent=fill})
+
+            function h:SetTitle(s) if titleLbl then titleLbl.Text = tostring(s or "") end end
+            function h:SetValue(val)
+                val = math.clamp(tonumber(val) or h.Min, h.Min, h.Max)
+                h.Value = val
+                local alpha = (h.Max > h.Min) and (val - h.Min) / (h.Max - h.Min) or 0
+                local tw = game:GetService("TweenService")
+                tw:Create(fill, TweenInfo.new(0.2,Enum.EasingStyle.Quint,Enum.EasingDirection.Out), {Size = UDim2.fromScale(alpha,1)}):Play()
+                if pctLbl then pctLbl.Text = math.floor(alpha*100).."%" end
+            end
+            function h:Destroy()
+                wrap:Destroy()
+                if idx then x.Options[idx] = nil end
+            end
+            h:SetValue(h.Value)
+            if idx then x.Options[idx] = h end
+            return _addElementToSection(C, h)
+        end
+
         z["AddSocial"] = function(C, cfg)
             cfg = (type(cfg) == "table") and cfg or {}
             local parent = C.Container
@@ -1391,11 +1552,33 @@ local aa = {
         z.Viewport = z.AddViewport
         z.Discord = z["AddDiscord"]
         z.Social = z["AddSocial"]
+        z.Checkbox = z["AddCheckbox"]
+        z.ProgressBar = z["AddProgressBar"]
         function x.CreateWindow(C, D)
             assert(D.Title, "Window - Missing Title")
             if x.Window then
                 print "You cannot create more than one window."
                 return
+            end
+            p.Library = x
+            do
+                local guiName = D.ScreenGuiName or "FluentPro"
+                if x.GUI then x.GUI.Name = guiName end
+                if x.ScrollGUI then x.ScrollGUI.Name = guiName .. "Scroll" end
+                if x.PopupGUI then x.PopupGUI.Name = guiName .. "Popup" end
+                if D.FolderName then
+                    local parent = (x.GUI and x.GUI.Parent) or game:GetService("CoreGui")
+                    local folder = parent:FindFirstChild(D.FolderName)
+                    if not folder or not folder:IsA("Folder") then
+                        folder = Instance.new("Folder")
+                        folder.Name = D.FolderName
+                        folder.Parent = parent
+                    end
+                    for _, gui in ipairs({x.GUI, x.ScrollGUI, x.PopupGUI}) do
+                        if gui then gui.Parent = folder end
+                    end
+                    x.Folder = folder
+                end
             end
             x.MinimizeKey = D.MinimizeKey
             x.UseAcrylic = D.Acrylic
@@ -1555,7 +1738,7 @@ local aa = {
             if x.Window then
                 x.Window.AcrylicPaint.Frame.Background.BackgroundTransparency = D and 0.35 or 0
             end
-            getgenv().WindowTransparent = D and true or false
+            x.WindowTransparent = D and true or false
         end
         local errorHints = {
             {"attempt to index nil",             "Did you forget to define a variable?"},
@@ -1642,6 +1825,7 @@ local aa = {
         SaveManager.Ignore = {}
         SaveManager.Parser = {
             Toggle    = { Save=function(idx,o) return{type="Toggle",idx=idx,value=o.Value} end, Load=function(idx,d) if SaveManager.Options[idx] then SaveManager.Options[idx]:SetValue(d.value) end end },
+            Checkbox  = { Save=function(idx,o) return{type="Checkbox",idx=idx,value=o.Value} end, Load=function(idx,d) if SaveManager.Options[idx] then SaveManager.Options[idx]:SetValue(d.value) end end },
             Slider    = { Save=function(idx,o) return{type="Slider",idx=idx,value=tostring(o.Value)} end, Load=function(idx,d) if SaveManager.Options[idx] then SaveManager.Options[idx]:SetValue(d.value) end end },
             Dropdown  = { Save=function(idx,o) return{type="Dropdown",idx=idx,value=o.Value,mutli=o.Multi} end, Load=function(idx,d) if SaveManager.Options[idx] then SaveManager.Options[idx]:SetValue(d.value) end end },
             Colorpicker={ Save=function(idx,o) return{type="Colorpicker",idx=idx,value=o.Value:ToHex(),transparency=o.Transparency} end, Load=function(idx,d) if SaveManager.Options[idx] then SaveManager.Options[idx]:SetValueRGB(Color3.fromHex(d.value),d.transparency) end end },
@@ -1713,26 +1897,68 @@ local aa = {
             local sec=tab:AddSection("Configuration","lucide/file-text")
             sec:AddInput("SaveManager_ConfigName",{Title="Config name", Icon="solar/pen-new-round-bold"})
             sec:AddDropdown("SaveManager_ConfigList",{Title="Config list",Values=self:RefreshConfigList(),AllowNull=true,NoSearch=true,Icon="solar/list-bold",DropdownOutsideWindow=true,IsManagerDropdown=true})
-            sec:AddButton({Title="Create config", Icon="solar/diskette-bold", Callback=function()
-                local name=SaveManager.Options.SaveManager_ConfigName.Value
-                if name:gsub(" ","")=="" then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Invalid name",Duration=7}) end
-                local ok,err=self:Save(name)
-                if not ok then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Failed: "..err,Duration=7}) end
-                self.Library:Notify({Title="Interface",Content="Config loader",SubContent=string.format("Created %q",name),Duration=7})
-                SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
-                SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
-            end})
             sec:AddButton({Title="Load config", Icon="solar/upload-minimalistic-bold", Callback=function()
                 local name=SaveManager.Options.SaveManager_ConfigList.Value
                 local ok,err=self:Load(name)
                 if not ok then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Failed: "..err,Duration=7}) end
                 self.Library:Notify({Title="Interface",Content="Config loader",SubContent=string.format("Loaded %q",name),Duration=7})
             end})
+            local function _doCreate(name)
+                local ok,err=self:Save(name)
+                if not ok then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Failed: "..err,Duration=7}) end
+                self.Library:Notify({Title="Interface",Content="Config loader",SubContent=string.format("Created %q",name),Duration=7})
+                SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
+                SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
+            end
+            sec:AddButton({Title="Create config", Icon="solar/diskette-bold", Callback=function()
+                local name=SaveManager.Options.SaveManager_ConfigName.Value
+                if name:gsub(" ","")=="" then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Invalid name",Duration=7}) end
+                local path=self.Folder.."/settings/"..name..".json"
+                if isfile(path) then
+                    local win=self.Library.Window
+                    if win then
+                        win:Dialog({
+                            Title="Overwrite config?",
+                            Content=string.format("A config named %q already exists. Overwrite it?",name),
+                            Buttons={
+                                {Title="Overwrite", Callback=function() _doCreate(name) end},
+                                {Title="Cancel"},
+                            },
+                        })
+                        return
+                    end
+                end
+                _doCreate(name)
+            end})
             sec:AddButton({Title="Overwrite config", Icon="solar/refresh-bold", Callback=function()
                 local name=SaveManager.Options.SaveManager_ConfigList.Value
                 local ok,err=self:Save(name)
                 if not ok then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="Failed: "..err,Duration=7}) end
                 self.Library:Notify({Title="Interface",Content="Config loader",SubContent=string.format("Overwrote %q",name),Duration=7})
+            end})
+            sec:AddButton({Title="Delete config", Icon="solar/trash-bin-trash-bold", Callback=function()
+                local name=SaveManager.Options.SaveManager_ConfigList.Value
+                if not name or name=="" then return self.Library:Notify({Title="Interface",Content="Config loader",SubContent="No config selected",Duration=7}) end
+                local win=self.Library.Window
+                local function _doDelete()
+                    local path=self.Folder.."/settings/"..name..".json"
+                    if isfile(path) then delfile(path) end
+                    self.Library:Notify({Title="Interface",Content="Config loader",SubContent=string.format("Deleted %q",name),Duration=7})
+                    SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
+                    SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
+                end
+                if win then
+                    win:Dialog({
+                        Title="Delete config?",
+                        Content=string.format("Are you sure you want to permanently delete %q?",name),
+                        Buttons={
+                            {Title="Delete", Callback=_doDelete},
+                            {Title="Cancel"},
+                        },
+                    })
+                else
+                    _doDelete()
+                end
             end})
             sec:AddButton({Title="Refresh list", Icon="solar/restart-bold", Callback=function()
                 SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
@@ -1849,24 +2075,43 @@ local aa = {
         InterfaceManager.FontStyles = {
             SourceSansItalic = Enum.FontStyle.Italic,
         }
+        InterfaceManager.FontSizeScale = {
+            GothamSSm = 1.0, Gotham = 1.0, Arial = 1.05, ArialBold = 1.05,
+            Roboto = 1.0, RobotoMono = 1.05,
+            SourceSans = 1.05, SourceSansBold = 1.05, SourceSansItalic = 1.05,
+            SourceSansSemibold = 1.05, SourceSansLight = 1.05,
+            Silkscreen = 1.35, Nunito = 1.05, Ubuntu = 1.05,
+            LuckiestGuy = 1.2, IndieFlower = 1.3, TitilliumWeb = 1.05,
+            Oswald = 1.05, Balthazar = 1.25, Jura = 1.1,
+        }
         function InterfaceManager:ApplyFont(name)
             local path = self.FontPaths[name]
             if not path then return end
             local weight = self.FontWeights[name] or Enum.FontWeight.Regular
             local style  = self.FontStyles[name]  or Enum.FontStyle.Normal
             local newFont = Font.new(path, weight, style)
-            local gui = self.Library and self.Library.GUI
-            if not gui then return end
+            local scale = self.FontSizeScale[name] or 1.0
+            if not self.Library then return end
             local function apply(inst, depth)
                 if depth > 12 then return end
                 for _, ch in ipairs(inst:GetChildren()) do
                     if ch:IsA("TextLabel") or ch:IsA("TextButton") or ch:IsA("TextBox") then
-                        pcall(function() ch.FontFace = newFont end)
+                        pcall(function()
+                            local baseSize = ch:GetAttribute("_baseTextSize")
+                            if not baseSize then
+                                baseSize = ch.TextSize
+                                ch:SetAttribute("_baseTextSize", baseSize)
+                            end
+                            ch.FontFace = newFont
+                            ch.TextSize = baseSize * scale
+                        end)
                     end
                     apply(ch, depth + 1)
                 end
             end
-            apply(gui, 0)
+            for _, gui in ipairs({self.Library.GUI, self.Library.ScrollGUI, self.Library.PopupGUI}) do
+                if gui then apply(gui, 0) end
+            end
             self.Settings.Font = name
             self:SaveSettings()
         end
@@ -1926,14 +2171,14 @@ local aa = {
             })
             InterfaceTheme:SetValue(Settings.Theme)
             section:AddToggle("AnimationToggle",{Title="Animated Window",Description="Enables shine/stroke animation on theme.",Icon="solar/stars-bold",Default=Settings.Animated,Callback=function(Value)
-                getgenv().ShineEnabled=Value; Settings.Animated=Value; InterfaceManager:SaveSettings()
+                Library.ShineEnabled=Value; Settings.Animated=Value; InterfaceManager:SaveSettings()
                 Library:SetTheme(Library.Theme)
-                if getgenv()._FluentProRefreshOpenDropdownShine then getgenv()._FluentProRefreshOpenDropdownShine() end
+                if Library._RefreshOpenDropdownShine then Library._RefreshOpenDropdownShine() end
             end})
             section:AddToggle("TransparentToggle",{Title="Transparency",Description="Makes the interface transparent.",Icon="solar/eye-bold",Default=Settings.Transparency,Callback=function(Value)
                 Library:ToggleTransparency(Value); Settings.Transparency=Value; InterfaceManager:SaveSettings()
-                if getgenv()._FluentProManagerDropdowns then
-                    for _, fn in ipairs(getgenv()._FluentProManagerDropdowns) do pcall(fn) end
+                if Library._ManagerDropdownSyncs then
+                    for _, fn in ipairs(Library._ManagerDropdownSyncs) do pcall(fn) end
                 end
             end})
             section:AddToggle("DisableBGToggle",{Title="Disable Background Images",Description="Hides theme background images.",Icon="solar/eye-closed-bold",Default=Settings.DisableBG or false,Callback=function(Value)
@@ -2064,23 +2309,39 @@ local aa = {
             local section=tab:AddSection("Floating Buttons Config","lucide/file-type-corner")
             section:AddInput("FB_ConfigName",{Title="Layout name",Icon="solar/widget-bold",Placeholder="Enter name..."})
             section:AddDropdown("FB_ConfigList",{Title="Layouts list",Values=self:RefreshConfigList(),AllowNull=true,NoSearch=true,Icon="solar/list-bold",DropdownOutsideWindow=true,IsManagerDropdown=true})
-            section:AddButton({Title="Create layout",Icon="solar/diskette-bold",Callback=function()
-                local name=self.Library.Options.FB_ConfigName.Value
-                if not name or name:gsub(" ","")=="" then
-                    return self.Library:Notify({Title="Floating Buttons",Content="Invalid layout name",Duration=5})
-                end
-                local ok,err=self:Save(name)
-                if not ok then return self.Library:Notify({Title="Floating Buttons",Content="Failed to save: "..tostring(err),Duration=5}) end
-                self.Library:Notify({Title="Floating Buttons",Content=string.format("Saved layout %q",name),Duration=5})
-                self.Library.Options.FB_ConfigList:SetValues(self:RefreshConfigList())
-                self.Library.Options.FB_ConfigList:SetValue(nil)
-            end})
             section:AddButton({Title="Load layout",Icon="solar/upload-minimalistic-bold",Callback=function()
                 local name=self.Library.Options.FB_ConfigList.Value
                 if not name or name=="" then return self.Library:Notify({Title="Floating Buttons",Content="No layout selected",Duration=5}) end
                 local ok,err=self:Load(name)
                 if not ok then return self.Library:Notify({Title="Floating Buttons",Content="Failed to load: "..tostring(err),Duration=5}) end
                 self.Library:Notify({Title="Floating Buttons",Content=string.format("Loaded layout %q",name),Duration=5})
+            end})
+            local function _doCreateFB(name)
+                local ok,err=self:Save(name)
+                if not ok then return self.Library:Notify({Title="Floating Buttons",Content="Failed to save: "..tostring(err),Duration=5}) end
+                self.Library:Notify({Title="Floating Buttons",Content=string.format("Saved layout %q",name),Duration=5})
+                self.Library.Options.FB_ConfigList:SetValues(self:RefreshConfigList())
+                self.Library.Options.FB_ConfigList:SetValue(nil)
+            end
+            section:AddButton({Title="Create layout",Icon="solar/diskette-bold",Callback=function()
+                local name=self.Library.Options.FB_ConfigName.Value
+                if not name or name:gsub(" ","")=="" then
+                    return self.Library:Notify({Title="Floating Buttons",Content="Invalid layout name",Duration=5})
+                end
+                local path=self.Folder.."/settings/"..name..".json"
+                local win=self.Library.Window
+                if isfile(path) and win then
+                    win:Dialog({
+                        Title="Overwrite layout?",
+                        Content=string.format("A layout named %q already exists. Overwrite it?",name),
+                        Buttons={
+                            {Title="Overwrite", Callback=function() _doCreateFB(name) end},
+                            {Title="Cancel"},
+                        },
+                    })
+                    return
+                end
+                _doCreateFB(name)
             end})
             section:AddButton({Title="Overwrite layout",Icon="solar/refresh-bold",Callback=function()
                 local name=self.Library.Options.FB_ConfigList.Value
@@ -2092,11 +2353,26 @@ local aa = {
             section:AddButton({Title="Delete layout",Icon="solar/close-circle-bold",Callback=function()
                 local name=self.Library.Options.FB_ConfigList.Value
                 if not name or name=="" then return self.Library:Notify({Title="Floating Buttons",Content="No layout selected",Duration=5}) end
-                local path=self.Folder.."/settings/"..name..".json"
-                if isfile(path) then delfile(path) end
-                self.Library:Notify({Title="Floating Buttons",Content=string.format("Deleted layout %q",name),Duration=5})
-                self.Library.Options.FB_ConfigList:SetValues(self:RefreshConfigList())
-                self.Library.Options.FB_ConfigList:SetValue(nil)
+                local win=self.Library.Window
+                local function _doDeleteFB()
+                    local path=self.Folder.."/settings/"..name..".json"
+                    if isfile(path) then delfile(path) end
+                    self.Library:Notify({Title="Floating Buttons",Content=string.format("Deleted layout %q",name),Duration=5})
+                    self.Library.Options.FB_ConfigList:SetValues(self:RefreshConfigList())
+                    self.Library.Options.FB_ConfigList:SetValue(nil)
+                end
+                if win then
+                    win:Dialog({
+                        Title="Delete layout?",
+                        Content=string.format("Are you sure you want to permanently delete %q?",name),
+                        Buttons={
+                            {Title="Delete", Callback=_doDeleteFB},
+                            {Title="Cancel"},
+                        },
+                    })
+                else
+                    _doDeleteFB()
+                end
             end})
             section:AddButton({Title="Refresh list",Icon="solar/restart-bold",Callback=function()
                 self.Library.Options.FB_ConfigList:SetValues(self:RefreshConfigList())
@@ -2518,7 +2794,7 @@ local aa = {
                 }
             )
             local m
-            if e(d.Parent.Parent).UseAcrylic then
+            if e(d.Parent.Parent).UseAcrylic and not (k and k.NoBlur) then
                 m = i()
                 m.Frame.Parent = l.Frame
                 l.Model = m.Model
@@ -2789,7 +3065,7 @@ local aa = {
                 m.AddSignal(
                     C.Frame.MouseButton1Click,
                     function()
-                        e(k):SafeCallback(B)
+                        e(k):SafeCallback(B, s.InputBox and s.InputBox.Text or nil)
                         pcall(
                             function()
                                 s:Close()
@@ -2798,6 +3074,39 @@ local aa = {
                     end
                 )
                 return C
+            end
+            function s.AddInput(z, placeholder, default)
+                s.InputHolder = p(
+                    "Frame",
+                    {
+                        Size = UDim2.new(1, -40, 0, 36),
+                        Position = UDim2.fromOffset(20, 0),
+                        BackgroundTransparency = 0,
+                        Parent = s.Root,
+                        ThemeTag = {BackgroundColor3 = "DialogInput"},
+                    },
+                    {
+                        p("UICorner", {CornerRadius = UDim.new(0, 6)}),
+                        p("UIStroke", {Transparency = 0.5, ThemeTag = {Color = "DialogInputLine"}}),
+                    }
+                )
+                s.InputBox = p("TextBox", {
+                    FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+                    Text = default or "",
+                    PlaceholderText = placeholder or "Enter text...",
+                    TextSize = 14,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    ClearTextOnFocus = false,
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, -20, 1, 0),
+                    Position = UDim2.fromOffset(10, 0),
+                    ThemeTag = {TextColor3 = "Text", PlaceholderColor3 = "SubText"},
+                    Parent = s.InputHolder,
+                })
+                return s.InputBox
+            end
+            function s.GetInputText(z)
+                return s.InputBox and s.InputBox.Text or nil
             end
             return s
         end
@@ -3085,7 +3394,7 @@ local aa = {
             q.Duration = q.Duration or nil
             q.Buttons = q.Buttons or {}
             local r = {Closed = false}
-            r.AcrylicPaint = k.AcrylicPaint()
+            r.AcrylicPaint = k.AcrylicPaint({NoBlur = true})
             r.Title =
                 n(
                 "TextLabel",
@@ -3111,6 +3420,7 @@ local aa = {
                 {
                     FontFace = Font.new "rbxasset://fonts/families/GothamSSm.json",
                     Text = q.Content,
+                    RichText = true,
                     TextColor3 = Color3.fromRGB(240, 240, 240),
                     TextSize = 14,
                     TextXAlignment = Enum.TextXAlignment.Left,
@@ -3128,6 +3438,7 @@ local aa = {
                 {
                     FontFace = Font.new "rbxasset://fonts/families/GothamSSm.json",
                     Text = q.SubContent,
+                    RichText = true,
                     TextColor3 = Color3.fromRGB(240, 240, 240),
                     TextSize = 14,
                     TextXAlignment = Enum.TextXAlignment.Left,
@@ -3244,6 +3555,12 @@ local aa = {
                 {BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Position = UDim2.fromScale(1, 0)},
                 notifRootChildren
             )
+            if Animation and Animation.Apply and j.Library then
+                pcall(function()
+                    local thm = e(h.Themes)[j.Library.Theme]
+                    Animation.Apply(thm, r.AcrylicPaint.Frame, j.Library.ShineEnabled)
+                end)
+            end
             if q.Content == "" then
                 r.ContentLabel.Visible = false
             end
@@ -3276,7 +3593,7 @@ local aa = {
                         function()
                             s:setGoal {Scale = l(1, {frequency = 5}), Offset = l(60, {frequency = 5})}
                             task.wait(0.4)
-                            if e(h).UseAcrylic then
+                            if e(h).UseAcrylic and r.AcrylicPaint.Model then
                                 r.AcrylicPaint.Model:Destroy()
                             end
                             r.Holder:Destroy()
@@ -3570,7 +3887,11 @@ local aa = {
                         pcall(function() sbHolder:Destroy() end)
                     end)
                 end
-                table.insert(_conns, (game:GetService("RunService")).RenderStepped:Connect(updateScrollbar))
+                local _rsName = "FluentProSB_" .. tostring(sf):gsub("[^%w]", "")
+                game:GetService("RunService"):BindToRenderStep(_rsName, Enum.RenderPriority.Last.Value, updateScrollbar)
+                table.insert(_conns, {Disconnect = function()
+                    pcall(function() game:GetService("RunService"):UnbindFromRenderStep(_rsName) end)
+                end})
                 table.insert(_conns, sf:GetPropertyChangedSignal("CanvasPosition"):Connect(updateScrollbar))
                 table.insert(_conns, sf:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateScrollbar))
                 table.insert(_conns, sf:GetPropertyChangedSignal("Visible"):Connect(updateScrollbar))
@@ -3939,7 +4260,7 @@ local aa = {
             end
             o.Tabs[q].SetTransparency(0.89)
             o.Tabs[q].Selected = true
-            r.TabDisplay.Text = o.Tabs[q].Name
+            r.TabDisplay.Text = o.Tabs[q].Name or ""
             local tabPos = o:GetCurrentTabPos()
             if tabPos then
                 if r.SelectorFrame then r.SelectorFrame.Visible = true end
@@ -4471,8 +4792,8 @@ local aa = {
                 ),
                 s(
                     "Frame",
-                    {Size = UDim2.fromOffset(20, 20), BackgroundTransparency = 1, Position = UDim2.new(1, -20, 1, -20)},
-                    {s("ImageLabel",{Size=UDim2.fromOffset(14,14),Position=UDim2.new(1,0,1,0),AnchorPoint=Vector2.new(1,1),BackgroundTransparency=1,Image="rbxassetid://10709811865",ImageTransparency=0.3,ThemeTag={ImageColor3="SubText"}})}
+                    {Size = UDim2.fromOffset(22, 22), BackgroundTransparency = 1, Position = UDim2.new(1, -22, 1, -22)},
+                    {s("ImageLabel",{Size=UDim2.fromOffset(18,18),Position=UDim2.new(1,-3,1,-3),AnchorPoint=Vector2.new(1,1),BackgroundTransparency=1,Image="rbxassetid://10709767750",ImageTransparency=0,ThemeTag={ImageColor3="Accent"}})}
                 )
             local uiTopH = 54
             local topOffset = 0
@@ -5208,16 +5529,32 @@ local aa = {
                     "UISizeConstraint",
                     {MinSize = Vector2.new(300, 165), MaxSize = Vector2.new(620, math.huge), Parent = P.Root}
                 )
-                P.Root.Size = UDim2.fromOffset(Q.TextBounds.X + 40, 165)
+                local extraH = 0
+                if O.Input then
+                    extraH = 46
+                end
+                P.Root.Size = UDim2.fromOffset(Q.TextBounds.X + 40, 165 + extraH)
                 if Q.TextBounds.X + 40 > v.Size.X.Offset - 120 then
-                    P.Root.Size = UDim2.fromOffset(v.Size.X.Offset - 120, 165)
+                    P.Root.Size = UDim2.fromOffset(v.Size.X.Offset - 120, 165 + extraH)
                     Q.TextWrapped = true
-                    P.Root.Size = UDim2.fromOffset(v.Size.X.Offset - 120, Q.TextBounds.Y + 150)
+                    P.Root.Size = UDim2.fromOffset(v.Size.X.Offset - 120, Q.TextBounds.Y + 150 + extraH)
+                end
+                if O.Input then
+                    local inputCfg = (type(O.Input) == "table") and O.Input or {}
+                    local box = P:AddInput(inputCfg.Placeholder, inputCfg.Default)
+                    P.InputHolder.Position = UDim2.new(0, 20, 1, -(70 + extraH - 8))
+                    if inputCfg.Numeric then
+                        m.AddSignal(box:GetPropertyChangedSignal("Text"), function()
+                            local filtered = box.Text:gsub("[^%d%.%-]", "")
+                            if filtered ~= box.Text then box.Text = filtered end
+                        end)
+                    end
                 end
                 for R, S in next, O.Buttons do
                     P:Button(S.Title, S.Callback)
                 end
                 P:Open()
+                return P
             end
             local N = e(p.Tab):Init(v)
             v.TabsAPI = N
@@ -5379,15 +5716,15 @@ local aa = {
                 p:setGoal(j.Instant.new(k.GetThemeProperty "ElementTransparency"))
             end
             local thm = i[e(h).Theme]
-            local x = getgenv().Fluent
+            local x = k.Library
             if x and x.Window and x.Window.AcrylicPaint then
-                if Animation and Animation.Apply then Animation.Apply(thm, x.Window.AcrylicPaint.Frame) end
+                if Animation and Animation.Apply then Animation.Apply(thm, x.Window.AcrylicPaint.Frame, x.ShineEnabled) end
                 task.defer(function()
-                    if getgenv()._FluentProRefreshOpenDropdownShine then
-                        getgenv()._FluentProRefreshOpenDropdownShine()
+                    if x._RefreshOpenDropdownShine then
+                        x._RefreshOpenDropdownShine()
                     end
                 end)
-                if thm and thm.ButtonGradient then getgenv().ButtonGradients = thm.ButtonGradient end
+                if thm and thm.ButtonGradient then x.ButtonGradients = thm.ButtonGradient end
                 local acrylicFrame = x.Window.AcrylicPaint.Frame
                 local bgParent = acrylicFrame
                 if bgParent then
@@ -5806,15 +6143,45 @@ local aa = {
                         )
                     end
                     local prevColor = Color3.fromHSV(D, E, F)
+                    local oldH, oldS, oldV = D, E, F
                     local blendEnabled = false
                     M.BackgroundColor3 = prevColor
                     O.BackgroundColor3 = prevColor
+                    local prevLbl = s("TextLabel", {
+                        Text = "#" .. prevColor:ToHex(), TextSize = 9,
+                        FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold),
+                        Position = UDim2.fromOffset(20, 256),
+                        Size = UDim2.fromOffset(80, 14),
+                        BackgroundTransparency = 1,
+                        Parent = C.Root,
+                        ThemeTag = {TextColor3 = "Accent"},
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                    })
+                    local oldLbl = s("TextLabel", {
+                        Text = "#" .. prevColor:ToHex(), TextSize = 9,
+                        FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+                        Position = UDim2.fromOffset(112, 256),
+                        Size = UDim2.fromOffset(80, 14),
+                        BackgroundTransparency = 1,
+                        Parent = C.Root,
+                        ThemeTag = {TextColor3 = "SubText"},
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                    })
+                    local oldRevertBtn = s("TextButton", {
+                        Text = "",
+                        Position = UDim2.fromOffset(112, 220),
+                        Size = UDim2.fromOffset(88, 24),
+                        BackgroundTransparency = 1,
+                        Parent = C.Root,
+                        ZIndex = 5,
+                    })
                     local ac = function()
                         local c1 = Color3.fromHSV(D, E, F)
                         L.BackgroundColor3 = Color3.fromHSV(D, 1, 1)
                         T.Position = UDim2.new(0, -1, D, -6)
                         K.Position = UDim2.new(E, 0, 1 - F, 0)
                         O.BackgroundColor3 = c1
+                        prevLbl.Text = "#" .. c1:ToHex()
                         V.Input.Text = "#" .. c1:ToHex()
                         W.Input.Text = math.floor(c1.r * 255)
                         X.Input.Text = math.floor(c1.g * 255)
@@ -5944,26 +6311,10 @@ local aa = {
                         )
                     end
                     ac()
-                    local prevLbl = s("TextLabel", {
-                        Text = "New", TextSize = 9,
-                        FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold),
-                        Position = UDim2.fromOffset(20, 256),
-                        Size = UDim2.fromOffset(80, 14),
-                        BackgroundTransparency = 1,
-                        Parent = C.Root,
-                        ThemeTag = {TextColor3 = "Accent"},
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                    })
-                    s("TextLabel", {
-                        Text = "Old", TextSize = 9,
-                        FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
-                        Position = UDim2.fromOffset(112, 256),
-                        Size = UDim2.fromOffset(80, 14),
-                        BackgroundTransparency = 1,
-                        Parent = C.Root,
-                        ThemeTag = {TextColor3 = "SubText"},
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                    })
+                    p.AddSignal(oldRevertBtn.MouseButton1Click, function()
+                        D, E, F = oldH, oldS, oldV
+                        ac()
+                    end)
                     C:Button(
                         "Done",
                         function()
@@ -6086,9 +6437,13 @@ local aa = {
         -- can immediately re-apply or clear shine on dropdowns that are already open, instead
         -- of waiting for the user to close and reopen them.
         local _openDropdowns = setmetatable({}, {__mode = "k"})
-        getgenv()._FluentProRefreshOpenDropdownShine = function()
-            for state in next, _openDropdowns do
-                if state._refreshShine then state._refreshShine() end
+        local function _registerShineRefresh(lib)
+            if lib and not lib._RefreshOpenDropdownShine then
+                lib._RefreshOpenDropdownShine = function()
+                    for state in next, _openDropdowns do
+                        if state._refreshShine then state._refreshShine() end
+                    end
+                end
             end
         end
         function g.New(h, i, j)
@@ -6105,6 +6460,7 @@ local aa = {
                         end
                 },
                 ac(f.Element)(j.Title, j.Description, h.Container, false)
+            _registerShineRefresh(h.Library)
             m.DescLabel.Size = UDim2.new(1, -170, 0, 14)
             l.SetTitle = m.SetTitle
             l.SetDesc = m.SetDesc
@@ -6245,17 +6601,17 @@ local aa = {
                 -- the window's own Transparency setting live, instead of having independent transparency.
                 local function _syncManagerTransparency()
                     local baseTransp = c.GetThemeProperty("DropdownTransparency") or 0
-                    u.BackgroundTransparency = getgenv().WindowTransparent and math.max(baseTransp, 0.35) or baseTransp
+                    u.BackgroundTransparency = h.Library.WindowTransparent and math.max(baseTransp, 0.35) or baseTransp
                 end
                 _syncManagerTransparency()
-                getgenv()._FluentProManagerDropdowns = getgenv()._FluentProManagerDropdowns or {}
-                table.insert(getgenv()._FluentProManagerDropdowns, _syncManagerTransparency)
+                h.Library._ManagerDropdownSyncs = h.Library._ManagerDropdownSyncs or {}
+                table.insert(h.Library._ManagerDropdownSyncs, _syncManagerTransparency)
             end
             local _isOutsideDD = (j.OutsideWindow or j.DropdownOutsideWindow) == true
             local _isManagerDDAnim = j.IsManagerDropdown == true
             local _themeSupportsShineInit = c.GetThemeProperty("ShineEnabled") == true
             local _initialAnimated = _themeSupportsShineInit and (
-                (_isManagerDDAnim and (getgenv().ShineEnabled == true)) or (j.Animated == true)
+                (_isManagerDDAnim and (h.Library.ShineEnabled == true)) or (j.Animated == true)
             )
             if _initialAnimated then
                 ddGradient.Visible = true
@@ -6426,7 +6782,7 @@ local aa = {
                 local themeSupportsShine = c.GetThemeProperty("ShineEnabled") == true
                 local shouldAnimate
                 if j.IsManagerDropdown then
-                    shouldAnimate = themeSupportsShine and getgenv().ShineEnabled == true
+                    shouldAnimate = themeSupportsShine and h.Library.ShineEnabled == true
                 else
                     shouldAnimate = themeSupportsShine and j.Animated == true
                 end
@@ -9737,6 +10093,8 @@ local aa = {
             ElementBorder=Color3.fromRGB(0,0,0), InElementBorder=Color3.fromRGB(30,30,30),
             ElementTransparency=0.96, ToggleSlider=Color3.fromRGB(30,30,30),
             ToggleToggled=Color3.fromRGB(255,255,255), SliderRail=Color3.fromRGB(30,30,30),
+            CheckboxUnchecked=Color3.fromRGB(30,30,30), CheckboxChecked=Color3.fromRGB(255,255,255),
+            CheckboxCheck=Color3.fromRGB(255,255,255), ProgressBarRail=Color3.fromRGB(30,30,30), ProgressBarFill=Color3.fromRGB(255,255,255),
             DropdownFrame=Color3.fromRGB(18,18,18), DropdownHolder=Color3.fromRGB(0,0,0),
             DropdownBorder=Color3.fromRGB(0,0,0), DropdownOption=Color3.fromRGB(22,22,22),
             Keybind=Color3.fromRGB(22,22,22), Input=Color3.fromRGB(12,12,12),
@@ -9763,6 +10121,8 @@ local aa = {
             ElementBorder=Color3.fromRGB(5,5,12), InElementBorder=Color3.fromRGB(0,200,160),
             ElementTransparency=0.88, ToggleSlider=Color3.fromRGB(0,180,140),
             ToggleToggled=Color3.fromRGB(0,0,0), SliderRail=Color3.fromRGB(0,200,160),
+            CheckboxUnchecked=Color3.fromRGB(0,200,160), CheckboxChecked=Color3.fromRGB(0,255,180),
+            CheckboxCheck=Color3.fromRGB(0,0,0), ProgressBarRail=Color3.fromRGB(0,200,160), ProgressBarFill=Color3.fromRGB(0,255,180),
             DropdownFrame=Color3.fromRGB(0,200,160), DropdownHolder=Color3.fromRGB(8,8,20),
             DropdownBorder=Color3.fromRGB(0,200,160), DropdownOption=Color3.fromRGB(0,200,160),
             Keybind=Color3.fromRGB(0,200,160), Input=Color3.fromRGB(20,20,40),
@@ -9790,6 +10150,8 @@ local aa = {
             ElementBorder=Color3.fromRGB(3,8,3), InElementBorder=Color3.fromRGB(35,160,15),
             ElementTransparency=0.88, ToggleSlider=Color3.fromRGB(57,255,20),
             ToggleToggled=Color3.fromRGB(0,0,0), SliderRail=Color3.fromRGB(57,255,20),
+            CheckboxUnchecked=Color3.fromRGB(57,255,20), CheckboxChecked=Color3.fromRGB(57,255,20),
+            CheckboxCheck=Color3.fromRGB(0,0,0), ProgressBarRail=Color3.fromRGB(57,255,20), ProgressBarFill=Color3.fromRGB(57,255,20),
             DropdownFrame=Color3.fromRGB(35,160,15), DropdownHolder=Color3.fromRGB(5,12,5),
             DropdownBorder=Color3.fromRGB(35,160,15), DropdownOption=Color3.fromRGB(57,255,20),
             Keybind=Color3.fromRGB(40,200,18), Input=Color3.fromRGB(10,22,10),
@@ -9816,6 +10178,8 @@ local aa = {
             ElementBorder=Color3.fromRGB(170,200,225), InElementBorder=Color3.fromRGB(140,185,218),
             ElementTransparency=0.65, ToggleSlider=Color3.fromRGB(120,175,215),
             ToggleToggled=Color3.fromRGB(30,70,120), SliderRail=Color3.fromRGB(150,200,235),
+            CheckboxUnchecked=Color3.fromRGB(150,200,235), CheckboxChecked=Color3.fromRGB(100,180,240),
+            CheckboxCheck=Color3.fromRGB(30,70,120), ProgressBarRail=Color3.fromRGB(150,200,235), ProgressBarFill=Color3.fromRGB(100,180,240),
             DropdownFrame=Color3.fromRGB(190,225,248), DropdownHolder=Color3.fromRGB(225,242,255),
             DropdownBorder=Color3.fromRGB(170,210,238), DropdownOption=Color3.fromRGB(130,180,220),
             Keybind=Color3.fromRGB(150,200,235), Input=Color3.fromRGB(200,230,248),
@@ -9842,6 +10206,8 @@ local aa = {
             ElementBorder=Color3.fromRGB(230,165,210), InElementBorder=Color3.fromRGB(235,170,215),
             ElementTransparency=0.70, ToggleSlider=Color3.fromRGB(215,145,192),
             ToggleToggled=Color3.fromRGB(90,30,70), SliderRail=Color3.fromRGB(235,170,215),
+            CheckboxUnchecked=Color3.fromRGB(235,170,215), CheckboxChecked=Color3.fromRGB(255,130,190),
+            CheckboxCheck=Color3.fromRGB(90,30,70), ProgressBarRail=Color3.fromRGB(235,170,215), ProgressBarFill=Color3.fromRGB(255,130,190),
             DropdownFrame=Color3.fromRGB(248,192,230), DropdownHolder=Color3.fromRGB(255,225,248),
             DropdownBorder=Color3.fromRGB(228,168,213), DropdownOption=Color3.fromRGB(205,140,188),
             Keybind=Color3.fromRGB(228,168,213), Input=Color3.fromRGB(250,210,238),
@@ -9869,6 +10235,8 @@ local aa = {
             ElementBorder=Color3.fromRGB(80,35,5), InElementBorder=Color3.fromRGB(200,90,10),
             ElementTransparency=0.92, ToggleSlider=Color3.fromRGB(255,140,30),
             ToggleToggled=Color3.fromRGB(0,0,0), SliderRail=Color3.fromRGB(180,80,10),
+            CheckboxUnchecked=Color3.fromRGB(180,80,10), CheckboxChecked=Color3.fromRGB(255,140,30),
+            CheckboxCheck=Color3.fromRGB(0,0,0), ProgressBarRail=Color3.fromRGB(180,80,10), ProgressBarFill=Color3.fromRGB(255,140,30),
             DropdownFrame=Color3.fromRGB(160,70,8), DropdownHolder=Color3.fromRGB(4,2,0),
             DropdownBorder=Color3.fromRGB(200,90,10), DropdownOption=Color3.fromRGB(255,140,30),
             Keybind=Color3.fromRGB(22,10,2), Input=Color3.fromRGB(18,8,2),
@@ -9896,6 +10264,8 @@ local aa = {
             ElementBorder=Color3.fromRGB(8,22,28), InElementBorder=Color3.fromRGB(40,165,160),
             ElementTransparency=0.88, ToggleSlider=Color3.fromRGB(57,197,187),
             ToggleToggled=Color3.fromRGB(0,0,0), SliderRail=Color3.fromRGB(40,165,160),
+            CheckboxUnchecked=Color3.fromRGB(40,165,160), CheckboxChecked=Color3.fromRGB(57,197,187),
+            CheckboxCheck=Color3.fromRGB(0,0,0), ProgressBarRail=Color3.fromRGB(40,165,160), ProgressBarFill=Color3.fromRGB(57,197,187),
             DropdownFrame=Color3.fromRGB(32,140,135), DropdownHolder=Color3.fromRGB(6,18,22),
             DropdownBorder=Color3.fromRGB(40,165,160), DropdownOption=Color3.fromRGB(57,197,187),
             Keybind=Color3.fromRGB(14,38,46), Input=Color3.fromRGB(10,28,35),
@@ -9923,6 +10293,8 @@ local aa = {
             ElementBorder=Color3.fromRGB(18,10,2), InElementBorder=Color3.fromRGB(200,130,30),
             ElementTransparency=0.88, ToggleSlider=Color3.fromRGB(255,170,40),
             ToggleToggled=Color3.fromRGB(0,0,0), SliderRail=Color3.fromRGB(190,125,25),
+            CheckboxUnchecked=Color3.fromRGB(190,125,25), CheckboxChecked=Color3.fromRGB(255,170,40),
+            CheckboxCheck=Color3.fromRGB(0,0,0), ProgressBarRail=Color3.fromRGB(190,125,25), ProgressBarFill=Color3.fromRGB(255,170,40),
             DropdownFrame=Color3.fromRGB(165,105,20), DropdownHolder=Color3.fromRGB(14,7,2),
             DropdownBorder=Color3.fromRGB(200,130,30), DropdownOption=Color3.fromRGB(255,170,40),
             Keybind=Color3.fromRGB(38,20,5), Input=Color3.fromRGB(28,14,3),
@@ -9961,6 +10333,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(255, 210, 230),
             ToggleToggled = Color3.fromRGB(255, 50, 140),
             SliderRail = Color3.fromRGB(100, 40, 75),
+            CheckboxUnchecked = Color3.fromRGB(100, 40, 75),
+            CheckboxChecked = Color3.fromRGB(255, 80, 150),
+            CheckboxCheck = Color3.fromRGB(255, 50, 140),
+            ProgressBarRail = Color3.fromRGB(100, 40, 75),
+            ProgressBarFill = Color3.fromRGB(255, 80, 150),
             DropdownFrame = Color3.fromRGB(45, 18, 35),
             DropdownHolder = Color3.fromRGB(35, 12, 25),
             DropdownBorder = Color3.fromRGB(180, 60, 130),
@@ -10037,6 +10414,11 @@ local aa = {
                 ToggleSlider = Color3.fromRGB(40, 10, 18),
                 ToggleToggled = Color3.fromRGB(220, 30, 60),
                 SliderRail = Color3.fromRGB(40, 10, 18),
+                CheckboxUnchecked = Color3.fromRGB(40, 10, 18),
+                CheckboxChecked = Color3.fromRGB(220, 30, 60),
+                CheckboxCheck = Color3.fromRGB(220, 30, 60),
+                ProgressBarRail = Color3.fromRGB(40, 10, 18),
+                ProgressBarFill = Color3.fromRGB(220, 30, 60),
                 DropdownFrame = Color3.fromRGB(12, 6, 12),
                 DropdownHolder = Color3.fromRGB(6, 4, 8),
                 DropdownBorder = Color3.fromRGB(100, 10, 25),
@@ -10106,6 +10488,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(255, 200, 90),
             ToggleToggled = Color3.fromRGB(0, 0, 0),
             SliderRail = Color3.fromRGB(120, 90, 30),
+            CheckboxUnchecked = Color3.fromRGB(120, 90, 30),
+            CheckboxChecked = Color3.fromRGB(255, 200, 90),
+            CheckboxCheck = Color3.fromRGB(0, 0, 0),
+            ProgressBarRail = Color3.fromRGB(120, 90, 30),
+            ProgressBarFill = Color3.fromRGB(255, 200, 90),
             DropdownFrame = Color3.fromRGB(50, 40, 20),
             DropdownHolder = Color3.fromRGB(35, 25, 10),
             DropdownBorder = Color3.fromRGB(120, 90, 30),
@@ -10126,7 +10513,7 @@ local aa = {
             SubText = Color3.fromRGB(170, 170, 170),
             Hover = Color3.fromRGB(255, 200, 90),
             HoverChange = 0.05,
-            ShineEnabled = getgenv().ShineEnabled,
+            ShineEnabled = true,
             Shine = {
                 Speed = 0.5,
                 RotationSpeed = 25,
@@ -10138,7 +10525,7 @@ local aa = {
                     }
                 )
             },
-            StrokeShine = getgenv().ShineEnabled,
+            StrokeShine = true,
             StrokeDark = Color3.fromRGB(120, 90, 30),
             ButtonGradient = {
                 Background = ColorSequence.new(
@@ -10178,6 +10565,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(140, 120, 160),
             ToggleToggled = Color3.fromRGB(0, 0, 0),
             SliderRail = Color3.fromRGB(140, 120, 160),
+            CheckboxUnchecked = Color3.fromRGB(140, 120, 160),
+            CheckboxChecked = Color3.fromRGB(97, 62, 167),
+            CheckboxCheck = Color3.fromRGB(0, 0, 0),
+            ProgressBarRail = Color3.fromRGB(140, 120, 160),
+            ProgressBarFill = Color3.fromRGB(97, 62, 167),
             DropdownFrame = Color3.fromRGB(170, 160, 200),
             DropdownHolder = Color3.fromRGB(60, 45, 80),
             DropdownBorder = Color3.fromRGB(50, 40, 65),
@@ -10249,6 +10641,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(120, 120, 120),
             ToggleToggled = Color3.fromRGB(0, 0, 0),
             SliderRail = Color3.fromRGB(120, 120, 120),
+            CheckboxUnchecked = Color3.fromRGB(120, 120, 120),
+            CheckboxChecked = Color3.fromRGB(150, 150, 150),
+            CheckboxCheck = Color3.fromRGB(0, 0, 0),
+            ProgressBarRail = Color3.fromRGB(120, 120, 120),
+            ProgressBarFill = Color3.fromRGB(150, 150, 150),
             DropdownFrame = Color3.fromRGB(160, 160, 160),
             DropdownHolder = Color3.fromRGB(45, 45, 45),
             DropdownBorder = Color3.fromRGB(35, 35, 35),
@@ -10329,6 +10726,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(90, 160, 255),
             ToggleToggled = Color3.fromRGB(0, 0, 0),
             SliderRail = Color3.fromRGB(60, 60, 60),
+            CheckboxUnchecked = Color3.fromRGB(60, 60, 60),
+            CheckboxChecked = Color3.fromRGB(102, 102, 102),
+            CheckboxCheck = Color3.fromRGB(0, 0, 0),
+            ProgressBarRail = Color3.fromRGB(60, 60, 60),
+            ProgressBarFill = Color3.fromRGB(102, 102, 102),
             DropdownFrame = Color3.fromRGB(30, 30, 30),
             DropdownHolder = Color3.fromRGB(20, 20, 20),
             DropdownBorder = Color3.fromRGB(60, 60, 60),
@@ -10398,6 +10800,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(60, 160, 255),
             ToggleToggled = Color3.fromRGB(255, 255, 255),
             SliderRail = Color3.fromRGB(200, 200, 200),
+            CheckboxUnchecked = Color3.fromRGB(200, 200, 200),
+            CheckboxChecked = Color3.fromRGB(214, 214, 214),
+            CheckboxCheck = Color3.fromRGB(255, 255, 255),
+            ProgressBarRail = Color3.fromRGB(200, 200, 200),
+            ProgressBarFill = Color3.fromRGB(214, 214, 214),
             DropdownFrame = Color3.fromRGB(230, 230, 230),
             DropdownHolder = Color3.fromRGB(220, 220, 220),
             DropdownBorder = Color3.fromRGB(200, 200, 200),
@@ -10467,6 +10874,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(180, 10, 20),
             ToggleToggled = Color3.fromRGB(255, 230, 230),
             SliderRail = Color3.fromRGB(145, 15, 25),
+            CheckboxUnchecked = Color3.fromRGB(145, 15, 25),
+            CheckboxChecked = Color3.fromRGB(180, 10, 20),
+            CheckboxCheck = Color3.fromRGB(255, 230, 230),
+            ProgressBarRail = Color3.fromRGB(145, 15, 25),
+            ProgressBarFill = Color3.fromRGB(180, 10, 20),
             DropdownFrame = Color3.fromRGB(115, 10, 18),
             DropdownHolder = Color3.fromRGB(28, 5, 8),
             DropdownBorder = Color3.fromRGB(80, 7, 13),
@@ -10536,6 +10948,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(180, 0, 255),
             ToggleToggled = Color3.fromRGB(15, 0, 40),
             SliderRail = Color3.fromRGB(130, 0, 230),
+            CheckboxUnchecked = Color3.fromRGB(130, 0, 230),
+            CheckboxChecked = Color3.fromRGB(180, 0, 255),
+            CheckboxCheck = Color3.fromRGB(15, 0, 40),
+            ProgressBarRail = Color3.fromRGB(130, 0, 230),
+            ProgressBarFill = Color3.fromRGB(180, 0, 255),
             DropdownFrame = Color3.fromRGB(255, 255, 255),
             DropdownHolder = Color3.fromRGB(10, 0, 30),
             DropdownBorder = Color3.fromRGB(50, 0, 140),
@@ -10605,6 +11022,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(0, 150, 200),
             ToggleToggled = Color3.fromRGB(255, 255, 255),
             SliderRail = Color3.fromRGB(0, 100, 150),
+            CheckboxUnchecked = Color3.fromRGB(0, 100, 150),
+            CheckboxChecked = Color3.fromRGB(0, 150, 200),
+            CheckboxCheck = Color3.fromRGB(255, 255, 255),
+            ProgressBarRail = Color3.fromRGB(0, 100, 150),
+            ProgressBarFill = Color3.fromRGB(0, 150, 200),
             DropdownFrame = Color3.fromRGB(0, 80, 120),
             DropdownHolder = Color3.fromRGB(10, 25, 40),
             DropdownBorder = Color3.fromRGB(0, 70, 105),
@@ -10668,6 +11090,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(100, 80, 200),
             ToggleToggled = Color3.fromRGB(255, 255, 255),
             SliderRail = Color3.fromRGB(60, 45, 140),
+            CheckboxUnchecked = Color3.fromRGB(60, 45, 140),
+            CheckboxChecked = Color3.fromRGB(100, 80, 200),
+            CheckboxCheck = Color3.fromRGB(255, 255, 255),
+            ProgressBarRail = Color3.fromRGB(60, 45, 140),
+            ProgressBarFill = Color3.fromRGB(100, 80, 200),
             DropdownFrame = Color3.fromRGB(45, 30, 110),
             DropdownHolder = Color3.fromRGB(8, 5, 20),
             DropdownBorder = Color3.fromRGB(35, 25, 85),
@@ -10731,6 +11158,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(15, 82, 186),
             ToggleToggled = Color3.fromRGB(255, 255, 255),
             SliderRail = Color3.fromRGB(10, 65, 150),
+            CheckboxUnchecked = Color3.fromRGB(10, 65, 150),
+            CheckboxChecked = Color3.fromRGB(15, 82, 186),
+            CheckboxCheck = Color3.fromRGB(255, 255, 255),
+            ProgressBarRail = Color3.fromRGB(10, 65, 150),
+            ProgressBarFill = Color3.fromRGB(15, 82, 186),
             DropdownFrame = Color3.fromRGB(8, 50, 120),
             DropdownHolder = Color3.fromRGB(8, 20, 45),
             DropdownBorder = Color3.fromRGB(6, 40, 95),
@@ -10794,6 +11226,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(160, 60, 220),
             ToggleToggled = Color3.fromRGB(255, 255, 255),
             SliderRail = Color3.fromRGB(125, 45, 190),
+            CheckboxUnchecked = Color3.fromRGB(125, 45, 190),
+            CheckboxChecked = Color3.fromRGB(160, 60, 220),
+            CheckboxCheck = Color3.fromRGB(255, 255, 255),
+            ProgressBarRail = Color3.fromRGB(125, 45, 190),
+            ProgressBarFill = Color3.fromRGB(160, 60, 220),
             DropdownFrame = Color3.fromRGB(100, 35, 152),
             DropdownHolder = Color3.fromRGB(8, 3, 20),
             DropdownBorder = Color3.fromRGB(72, 24, 108),
@@ -10840,6 +11277,11 @@ local aa = {
             ToggleSlider = Color3.fromRGB(80, 60, 140),
             ToggleToggled = Color3.fromRGB(255, 255, 255),
             SliderRail = Color3.fromRGB(55, 38, 115),
+            CheckboxUnchecked = Color3.fromRGB(55, 38, 115),
+            CheckboxChecked = Color3.fromRGB(80, 60, 140),
+            CheckboxCheck = Color3.fromRGB(255, 255, 255),
+            ProgressBarRail = Color3.fromRGB(55, 38, 115),
+            ProgressBarFill = Color3.fromRGB(80, 60, 140),
             DropdownFrame = Color3.fromRGB(44, 30, 92),
             DropdownHolder = Color3.fromRGB(8, 6, 16),
             DropdownBorder = Color3.fromRGB(32, 22, 68),
