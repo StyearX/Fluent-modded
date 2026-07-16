@@ -1,13 +1,23 @@
 # FluentPro 
 
 ## Change Logs
-`1.5.5`
-|• add `Animated` as Properties to create window as boolean|
-|• add `SearchInHeader`as another search variant which is in the Title bar|
-|• add webm url support in video and theme background |
-|• Fix collision between window and window in different hubs fixes such as Animated window and theme collisions |
-|• Disable Notify Animated and other for optimization (only temporary) |
-| • add icons in Buttons to resize Window |
+
+### v1.5.5
+
+**New Features:**
+- Add `Animated` property (boolean) to enable or disable window animation
+- Add `SearchInHeader` as an alternative search variant placed in the title bar
+- Add WebM URL support for video and theme backgrounds
+
+**Bug Fixes:**
+- Fix collision between windows across different hubs (e.g., animated window and theme conflicts)
+- Fix various stability and compatibility issues
+
+**Optimization:**
+- Temporarily disable Notify Animated and other animations for performance optimization
+
+**UI/UX Improvements:**
+- Add resize icons to window buttons
 
 
 Documentation of every UI element and components available in FluentPro, including the special properties each one supports.
