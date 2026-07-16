@@ -425,6 +425,27 @@ InterfaceManager:ApplyCustomFont(source, weight)
 | `weight` | Enum.FontWeight | Optional, e.g. `Enum.FontWeight.Medium` |
 
 ---
+## You can also create almost any font using rich text.
+lua example 
+```lua
+local secRichText = Tabs.Components:AddSection("Rich Text", "solar/text-bold")
+
+secRichText:AddParagraph({
+    Title = "Rich Text Is On By Default",
+    Content = "Every text label in FluentPro renders <b>Roblox rich text</b> tags automatically no setup needed. That means <i>italics</i>, <u>underline</u>, <s>strikethrough</s>, and even nested combos like <b><i>bold italic</i></b> just work in any Title, Description, or Paragraph Content.",
+})
+
+secRichText:AddParagraph({
+    Title = "<font color=\"rgb(255,120,120)\">Colored</font> <font color=\"rgb(120,200,255)\">Titles</font>",
+    Content = "You can color individual words with <font color=\"rgb(255,200,90)\">&lt;font color=\"rgb(r,g,b)\"&gt;</font> tags, mix sizes with <font size=\"22\">size=\"22\"</font>, or point at a custom font family with <font face=\"rbxasset://fonts/families/GothamSSm.json\">face=\"...\"</font>.",
+})
+
+secRichText:AddCode({
+    Title = "Example",
+    Code = 'sec:AddParagraph({\n    Title = "<b>Loot Drop</b>",\n    Content = "You found a <font color=\\"rgb(255,200,90)\\">Legendary</font> item!",\n})',
+})
+```
+---
 
 ## Managers
 
