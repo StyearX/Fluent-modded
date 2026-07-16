@@ -396,16 +396,84 @@ InterfaceManager:ApplyCustomFont(source, weight)
 
 ---
 
-## Quick Reference: Special Properties
+## custom theme Format 
 
-| Components | Special Properties |
-|---|---|
-| Dropdown | `Multi`, `Animated`, `DropdownOutsideWindow`, `DropdownBackgroundTransparency`, `DropdownBackgroundImages` |
-| Keybind | `Mode` (`"Toggle"` / `"Always"`) |
-| Video / Image / Viewport | `AspectRatio`, `SetAspectRatio(ratio)` |
-| Audio | `PlayOutsideWindow`, `AudioTitle`, `AudioSubtitle` |
-| Viewport | `Focused`, `Interactive`, `SetObject`, `Focus` |
-| Social | Auto-detect from `ProfileUrl` alone |
-| Collapsible Section | `Open` (third positional argument) |
-| Window | `Search`, `Acrylic`, `UserInfoTop` |
-| Custom Theme | `ShineEnabled` |
+`Fluent:RegisterCustomTheme("String", {
+    Accent = Color3.fromRGB(Value, Value, Value),
+    AcrylicMain = Color3.fromRGB(Value, Value, Value),
+    AcrylicBorder = Color3.fromRGB(Value, Value, Value),
+    AcrylicGradient = ColorSequence.new(Color3.fromRGB(Value, Value, Value), Color3.fromRGB(Value, Value, Value)),
+    AcrylicNoise = Value,
+    TitleBarLine = Color3.fromRGB(Value, Value, Value),
+    Tab = Color3.fromRGB(Value, Value, Value),
+    Element = Color3.fromRGB(Value, Value, Value),
+    ElementBorder = Color3.fromRGB(Value, Value, Value),
+    InElementBorder = Color3.fromRGB(Value, Value, Value),
+    ElementTransparency = Value,
+    ElementBorderThickness = Value,
+    ToggleSlider = Color3.fromRGB(Value, Value, Value),
+    ToggleToggled = Color3.fromRGB(Value, Value, Value),
+    SliderRail = Color3.fromRGB(Value, Value, Value),
+    CheckboxUnchecked = Color3.fromRGB(Value, Value, Value),
+    CheckboxChecked = Color3.fromRGB(Value, Value, Value),
+    CheckboxCheck = Color3.fromRGB(Value, Value, Value),
+    ProgressBarRail = Color3.fromRGB(Value, Value, Value),
+    ProgressBarFill = Color3.fromRGB(Value, Value, Value),
+    DropdownFrame = Color3.fromRGB(Value, Value, Value),
+    DropdownHolder = Color3.fromRGB(Value, Value, Value),
+    DropdownBorder = Color3.fromRGB(Value, Value, Value),
+    DropdownOption = Color3.fromRGB(Value, Value, Value),
+    DropdownBorderThickness = Value,
+    Keybind = Color3.fromRGB(Value, Value, Value),
+    Input = Color3.fromRGB(Value, Value, Value),
+    InputFocused = Color3.fromRGB(Value, Value, Value),
+    InputIndicator = Color3.fromRGB(Value, Value, Value),
+    Dialog = Color3.fromRGB(Value, Value, Value),
+    DialogHolder = Color3.fromRGB(Value, Value, Value),
+    DialogHolderLine = Color3.fromRGB(Value, Value, Value),
+    DialogButton = Color3.fromRGB(Value, Value, Value),
+    DialogButtonBorder = Color3.fromRGB(Value, Value, Value),
+    DialogBorder = Color3.fromRGB(Value, Value, Value),
+    DialogInput = Color3.fromRGB(Value, Value, Value),
+    DialogInputLine = Color3.fromRGB(Value, Value, Value),
+    Text = Color3.fromRGB(Value, Value, Value),
+    SubText = Color3.fromRGB(Value, Value, Value),
+    Hover = Color3.fromRGB(Value, Value, Value),
+    HoverChange = Value,
+    Background = "String",
+    BackgroundTransparency = Value,
+    BackgroundImagesRectPosition = nil,
+    BackgroundImagesRectSize = nil,
+    ViewportBackground = Color3.fromRGB(Value, Value, Value),
+    ViewportBackgroundImages = "Boolean",
+    DropdownOutsideWindowBackground = Color3.fromRGB(Value, Value, Value),
+    DropdownOutsideWindowBackgroundImages = "Boolean",
+    ShineEnabled = "Boolean",
+    Shine = {
+        Speed = Value,
+        RotationSpeed = Value,
+        ColorSequence = ColorSequence.new({
+            ColorSequenceKeypoint.new(Value, Color3.fromRGB(Value, Value, Value)),
+            ColorSequenceKeypoint.new(Value, Color3.fromRGB(Value, Value, Value)),
+            ColorSequenceKeypoint.new(Value, Color3.fromRGB(Value, Value, Value)),
+        }),
+    },
+    StrokeShine = "Boolean",
+    StrokeDark = Color3.fromRGB(Value, Value, Value),
+    ButtonGradient = {
+        Background = ColorSequence.new({
+            ColorSequenceKeypoint.new(Value, Color3.fromRGB(Value, Value, Value)),
+            ColorSequenceKeypoint.new(Value, Color3.fromRGB(Value, Value, Value)),
+        }),
+        Stroke = ColorSequence.new({
+            ColorSequenceKeypoint.new(Value, Color3.fromRGB(Value, Value, Value)),
+            ColorSequenceKeypoint.new(Value, Color3.fromRGB(Value, Value, Value)),
+            ColorSequenceKeypoint.new(Value, Color3.fromRGB(Value, Value, Value)),
+        }),
+    },
+    DiscordJoinButton = Color3.fromRGB(Value, Value, Value),
+    WarningNotifyColor = Color3.fromRGB(Value, Value, Value),
+    SuccessNotifyColor = Color3.fromRGB(Value, Value, Value),
+    ErrorNotifyColor = Color3.fromRGB(Value, Value, Value),
+    InfoNotifyColor = Color3.fromRGB(Value, Value, Value),
+})`
