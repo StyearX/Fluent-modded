@@ -70,6 +70,18 @@ Created with `Window:AddTab({ Title = "Name", Icon = "solar/layers-bold" })`.
 
 Tabs support adding elements directly, without a section wrapper: `Tabs.YourTabName:AddButton({...})`, `Tabs.YourTabName:AddParagraph({...})`, `Tabs.YourTabName:AddDivider()`, and so on. Elements added this way follow the same insertion order as elements inside sections.
 
+## Create Tabs Example 
+```lua
+Tabs = {
+    Main = Window:AddTab({ Title = "|  Main", Icon = "rbxassetid://7733960981" }),
+    Misc = Window:AddTab({ Title = "|  Misc", Icon = "rbxassetid://7734068321" }),
+    Combat = Window:AddTab({ Title = "|  Combat", Icon = "lucide/swords" }),
+    Visual = Window:AddTab({ Title = "|  Visual", Icon = "rbxassetid://10709819149" }),
+    Info = Window:AddTab({ Title = "|  Info", Icon = "rbxassetid://10723415903" }),
+    Settings = Window:AddTab({ Title = "|  Settings", Icon = "rbxassetid://7734052335" }),
+    Extension = Window:AddTab({ Title = "|  Extension", Icon = "rbxassetid://10734930886" }),
+}
+```
 ---
 
 ## Section
