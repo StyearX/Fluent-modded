@@ -15,10 +15,28 @@
 - Fix various stability and compatibility issues
 
 **Optimization:**
-- Temporarily disable Notify Animated and other animations for performance optimization
+- Temporarily disable Notify Animated and other notify logic for performance optimization
 
 **UI/UX Improvements:**
 - Add resize icons to window buttons
+
+---
+
+### v1.5.4
+
+**New Features:**
+- Add back Acrylic Toggle via InterfaceManager
+- Add `Tags` property (similar to Version but fully customizable)
+- Add `BackgroundImagesRectPosition` and `BackgroundImagesRectSize` support for both Native and custom themes — allows cropping of background area
+
+**Changes:**
+- Subtitles are now positioned below the Title (no longer aligned side-by-side)
+
+**Removals:**
+- Remove Lucide icons from Fluent 1.1.0
+
+**Optimization:**
+- Disable Notify Animated to reduce lag
 ---
 
 
