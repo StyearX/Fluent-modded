@@ -398,7 +398,8 @@ InterfaceManager:ApplyCustomFont(source, weight)
 
 ## custom theme Format 
 
-`Fluent:RegisterCustomTheme("String", {
+```lua
+Fluent:RegisterCustomTheme("String", {
     Accent = Color3.fromRGB(Value, Value, Value),
     AcrylicMain = Color3.fromRGB(Value, Value, Value),
     AcrylicBorder = Color3.fromRGB(Value, Value, Value),
@@ -476,4 +477,5 @@ InterfaceManager:ApplyCustomFont(source, weight)
     SuccessNotifyColor = Color3.fromRGB(Value, Value, Value),
     ErrorNotifyColor = Color3.fromRGB(Value, Value, Value),
     InfoNotifyColor = Color3.fromRGB(Value, Value, Value),
-})`
+})
+```
