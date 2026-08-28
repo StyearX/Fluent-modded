@@ -4,7 +4,7 @@
   "description": "modded Versions of fluent Library and Fluent plus with more features",
   "main": "init.lua",
   "scripts": {
-    "rojo": "mkdirp dist && rojo build -o dist/main.rbxm",
+    "rojo": "mkdirp dist && rojo build -o dist/main.lua",
     "bundle": "pnpm run rojo && lune build"
   },
   "keywords": [],
