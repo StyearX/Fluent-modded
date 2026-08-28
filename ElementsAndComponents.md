@@ -1,58 +1,12 @@
 # FluentPro 
 ---
-maybe next time i won't update the repo but only weakly update release
----
-## Change Logs
-
-### v1.5.5
-
-**New Features:**
-- Add `Animated` property (boolean) to enable or disable window animation
-- Add `SearchInHeader` as an alternative search variant placed in the title bar
-- Add WebM URL support for video and theme backgrounds
-
-**Bug Fixes:**
-- Fix collision between windows across different hubs (e.g., animated window and theme conflicts)
-- Fix various stability and compatibility issues
-
-**Optimization:**
-- Temporarily disable Notify Animated and other notify logic for performance optimization
-
-**UI/UX Improvements:**
-- Add resize icons to window buttons
-
----
-## v1.5.5 fix
-- Add Favoriteable Boolean to Disable favorites in tabs
-- fix stupid fallback to random images when Backgrounds is enabled
-
-- in ## v1.5.6 there will be some major improvements to the Search filter and Acrylic 
-
-### v1.5.4
-
-**New Features:**
-- Add back Acrylic Toggle via InterfaceManager
-- Add `Tags` property (similar to Version but fully customizable)
-- Add `BackgroundImagesRectPosition` and `BackgroundImagesRectSize` support for both Native and custom themes — allows cropping of background area
-
-**Changes:**
-- Subtitles are now positioned below the Title (no longer aligned side-by-side)
-
-**Removals:**
-- Remove Lucide icons from Fluent 1.1.0
-
-**Optimization:**
-- Disable Notify Animated to reduce lag
----
-
-
 Documentation of every UI element and components available in FluentPro, including the special properties each one supports.
 
 ---
 ## Load FluentPro 
 You can load fluentPro in all executors/injectors that support things like Getcustomasset, Http Service, Write File, other 
 ```lua
-local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-modded/releases/download/1.5.5/FluentPro"))()
+local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-modded/releases/download/?.?.?/main.ua"))()
 ```
 ---
 ## Window
@@ -97,7 +51,6 @@ Window = Fluent:CreateWindow({
     Size = isMobile and UDim2.fromOffset(480, 490) or UDim2.fromOffset(580, 560),
     Theme = "Blood Red",
     Search = true,
-    SearchInHeader = true,
     Icons = "rbxassetid://139095000385640",
     TitleIcon = "rbxassetid://139379979502671",
     UserInfoTop = true,
