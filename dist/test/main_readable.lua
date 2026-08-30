@@ -11782,12 +11782,12 @@ local ClosureBindings = {
             assert(c, "Missing argument #1: targetValue")
             d = d or {}
             return setmetatable(
-                {_targetValue = c, _frequency = script.frequency or 4, _dampingRatio = script.dampingRatio or 1},
+                {_targetValue = c, _frequency = d.frequency or 4, _dampingRatio = d.dampingRatio or 1},
                 aj
             )
         end
         function aj.step(c, d, e)
-            local f, g, h, i, j = c._dampingRatio, c._frequency * 2 * math.pi, c._targetValue, script.value, script.velocity or 0
+            local f, g, h, i, j = c._dampingRatio, c._frequency * 2 * math.pi, c._targetValue, d.value, d.velocity or 0
             local k, l, m, n = i - h, (math.exp(-f * g * e))
             if f == 1 then
                 m = (k * (1 + g * e) + j * e) * l + h
