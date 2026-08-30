@@ -2014,12 +2014,12 @@ local ClosureBindings = {
             Library.WindowTransparent = D and true or false
         end
         function Library.Notify(C, D)
-            return t:New(D)
+            return NotificationModule:New(D)
         end
         function Library.CopyableNotify(C, D)
             D = D or {}
             D.Copyable = true
-            return t:New(D)
+            return NotificationModule:New(D)
         end
 
         local rgbConn = nil
@@ -2855,7 +2855,7 @@ local ClosureBindings = {
                 local id = tostring(raw):match("^rbxassetid://(%d+)$") or tostring(raw):match("^(%d+)$")
                 return id and ("rbxassetid://" .. id) or nil
             end
-            local mCr = require(o.Creator)
+            local mCr = require(Root.Creator)
             local mS  = mCr.New
             local mGui = Instance.new("ScreenGui")
             mGui.Name = "FluentMinimizerGui"
