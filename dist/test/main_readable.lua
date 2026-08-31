@@ -3196,20 +3196,20 @@ local ClosureBindings = {
             end
             local k = function()
                 local k = function(k)
-                    if k:IsA "DepthOfFieldEffect" then
-                        j[k] = {enabled = k.Enabled}
+                    if depthEffect:IsA "DepthOfFieldEffect" then
+                        j[k] = {enabled = depthEffect.Enabled}
                     end
                 end
                 for l, m in pairs(game:GetService "Lighting":GetChildren()) do
-                    k(m)
+                    depthEffect(m)
                 end
                 if game:GetService "Workspace".CurrentCamera then
                     for n, o in pairs(game:GetService "Workspace".CurrentCamera:GetChildren()) do
-                        k(o)
+                        depthEffect(o)
                     end
                 end
             end
-            k()
+            depthEffect()
             Acrylic.Enable()
         end
         return Acrylic
@@ -3220,8 +3220,8 @@ local ClosureBindings = {
         local l = function(l)
             local m = {}
             l = l or 0.001
-            local n, o = {topLeft = Vector2.new(), topRight = Vector2.new(), bottomRight = Vector2.new()}, i()
-            o.Parent = workspace
+            local n, o = {topLeft = Vector2.new(), topRight = Vector2.new(), bottomRight = Vector2.new()}, createAcrylicFn()
+            acrylicObj.Parent = workspace
             local p, q = function(p, q)
                     n.topLeft = q
                     n.topRight = q + Vector2.new(p.X, 0)
@@ -3236,13 +3236,13 @@ local ClosureBindings = {
                         q = CFrame.new()
                     end
                     local r, s, t, u = q, n.topLeft, n.topRight, n.bottomRight
-                    local v, w, x = j(s, l), j(t, l), j(u, l)
+                    local v, w, x = Creator(s, l), Creator(t, l), Creator(u, l)
                     local y, z = (w - v).Magnitude, (w - x).Magnitude
-                    o.CFrame = CFrame.fromMatrix((v + x) / 2, r.XVector, r.YVector, r.ZVector)
-                    o.Mesh.Scale = Vector3.new(y, z, 0)
+                    acrylicObj.CFrame = CFrame.fromMatrix((v + x) / 2, r.XVector, r.YVector, r.ZVector)
+                    acrylicObj.Mesh.Scale = Vector3.new(y, z, 0)
                 end
             local r, s = function(r)
-                    local s = k()
+                    local s = screenToWorldFn()
                     local t, u = r.AbsoluteSize - Vector2.new(s, s), r.AbsolutePosition + Vector2.new(s / 2, s / 2)
                     p(t, u)
                     task.spawn(q)
@@ -3256,7 +3256,7 @@ local ClosureBindings = {
                     table.insert(m, r:GetPropertyChangedSignal "FieldOfView":Connect(q))
                     task.spawn(q)
                 end
-            o.Destroying:Connect(
+            acrylicObj.Destroying:Connect(
                 function()
                     for t, u in m do
                         pcall(
@@ -3271,23 +3271,23 @@ local ClosureBindings = {
             return r, o
         end
         return function(m)
-            local n, o, p = {}, l(m)
-            local q = h.New("Frame", {BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1)})
+            local n, o, p = {}, getDepthFn(m)
+            local q = Creator.New("Frame", {BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1)})
             local _dirty = false
-            h.AddSignal(
+            Creator.AddSignal(
                 q:GetPropertyChangedSignal "AbsolutePosition",
                 function()
                     _dirty = true
                 end
             )
-            h.AddSignal(
+            Creator.AddSignal(
                 q:GetPropertyChangedSignal "AbsoluteSize",
                 function()
                     _dirty = true
                 end
             )
             n.AddParent = function(r)
-                h.AddSignal(
+                Creator.AddSignal(
                     r:GetPropertyChangedSignal "Visible",
                     function()
                         n.SetVisibility(r.Visible)
@@ -3301,7 +3301,7 @@ local ClosureBindings = {
                 if q and q.Parent then
                     if _dirty then
                         _dirty = false
-                        o(q)
+                        acrylicObj(q)
                     end
                 end
             end)
@@ -3420,7 +3420,7 @@ local ClosureBindings = {
             )
             local m
             if require(script.Parent.Parent).UseAcrylic and not (k and k.NoBlur) then
-                m = i()
+                m = AcrylicBlur()
                 m.Frame.Parent = l.Frame
                 l.Model = m.Model
                 l.AddParent = m.AddParent
@@ -3435,7 +3435,7 @@ local ClosureBindings = {
         local i = require(h.Creator)
         local j = function()
             local j =
-                i.New(
+                Creator.New(
                 "Part",
                 {
                     Name = "Body",
@@ -3450,7 +3450,7 @@ local ClosureBindings = {
                     CastShadow = false,
                     Transparency = 0.98
                 },
-                {i.New("SpecialMesh", {MeshType = Enum.MeshType.Brick, Offset = Vector3.new(0, 0, -1E-6)})}
+                {Creator.New("SpecialMesh", {MeshType = Enum.MeshType.Brick, Offset = Vector3.new(0, 0, -1E-6)})}
             )
             return j
         end
@@ -3481,8 +3481,8 @@ local ClosureBindings = {
     [9] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(9)
         local h = script.Parent.Parent
-        local i, j = require(h.Packages.Flipper), require(h.Creator)
-        local New, l = j.New, i.Spring.new
+        local Flipper, j = require(h.Packages.Flipper), require(h.Creator)
+        local New, l = Creator.New, Flipper.Spring.new
         return function(m, n, o)
             o = o or false
             local p = {}
@@ -3527,26 +3527,26 @@ local ClosureBindings = {
                     p.Title
                 }
             )
-            local q, r = j.SpringMotor(1, p.HoverFrame, "BackgroundTransparency", o)
-            j.AddSignal(
+            local q, r = Creator.SpringMotor(1, p.HoverFrame, "BackgroundTransparency", o)
+            Creator.AddSignal(
                 p.Frame.MouseEnter,
                 function()
                     r(0.97)
                 end
             )
-            j.AddSignal(
+            Creator.AddSignal(
                 p.Frame.MouseLeave,
                 function()
                     r(1)
                 end
             )
-            j.AddSignal(
+            Creator.AddSignal(
                 p.Frame.MouseButton1Down,
                 function()
                     r(1)
                 end
             )
-            j.AddSignal(
+            Creator.AddSignal(
                 p.Frame.MouseButton1Up,
                 function()
                     r(0.97)
@@ -3557,13 +3557,13 @@ local ClosureBindings = {
     end,
     [10] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(10)
-        local h, i, j, k =
+        local UserInputService, Mouse, Camera, k =
             game:GetService "UserInputService",
             game:GetService "Players".LocalPlayer:GetMouse(),
             game:GetService "Workspace".CurrentCamera,
             script.Parent.Parent
-        local l, m = require(k.Packages.Flipper), require(k.Creator)
-        local n, o, p, q = l.Spring.new, l.Instant.new, m.New, {Window = nil}
+        local Flipper, m = require(k.Packages.Flipper), require(k.Creator)
+        local n, o, p, q = Flipper.Spring.new, Flipper.Instant.new, Creator.New, {Window = nil}
         function q.Init(r, s)
             q.Window = s
             return q
@@ -3582,7 +3582,7 @@ local ClosureBindings = {
                 },
                 {New("UICorner", {CornerRadius = UDim.new(0, 8)})}
             )
-            local t, u = m.SpringMotor(1, s.TintFrame, "BackgroundTransparency", true)
+            local t, u = Creator.SpringMotor(1, s.TintFrame, "BackgroundTransparency", true)
             s.ButtonHolder =
                 New(
                 "Frame",
@@ -3638,7 +3638,7 @@ local ClosureBindings = {
                 }
             )
             s.Scale = New("UIScale", {Scale = 1})
-            local v, w = m.SpringMotor(1.1, s.Scale, "Scale")
+            local v, w = Creator.SpringMotor(1.1, s.Scale, "Scale")
             s.Root =
                 New(
                 "CanvasGroup",
@@ -3658,7 +3658,7 @@ local ClosureBindings = {
                     s.ButtonHolderFrame
                 }
             )
-            local x, y = m.SpringMotor(1, s.Root, "GroupTransparency")
+            local x, y = Creator.SpringMotor(1, s.Root, "GroupTransparency")
             function s.Open(z)
                 require(k).DialogOpen = true
                 s.Scale.Scale = 1.1
@@ -3687,7 +3687,7 @@ local ClosureBindings = {
                         E.Size = UDim2.new(1 / s.Buttons, -(((s.Buttons - 1) * 10) / s.Buttons), 0, 32)
                     end
                 end
-                m.AddSignal(
+                Creator.AddSignal(
                     C.Frame.MouseButton1Click,
                     function()
                         require(k):SafeCallback(B, s.InputBox and s.InputBox.Text or nil)
@@ -3740,8 +3740,8 @@ local ClosureBindings = {
     [11] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(11)
         local h = script.Parent.Parent
-        local i, j = require(h.Packages.Flipper), require(h.Creator)
-        local New, springNew = j.New, i.Spring.new
+        local Mouse, j = require(UserInputService.Packages.Flipper), require(UserInputService.Creator)
+        local New, springNew = Camera.New, Mouse.Spring.new
         local _TS_svc = game:GetService("TextService")
         local _RS_svc = game:GetService("RunService")
         local _marqueeConns = setmetatable({}, {__mode = "k"})
@@ -3854,7 +3854,7 @@ local ClosureBindings = {
                         Enum.FontWeight.Medium,
                         Enum.FontStyle.Normal
                     ),
-                    Text = m,
+                    Text = Creator,
                     TextColor3 = Color3.fromRGB(240, 240, 240),
                     TextSize = 13,
                     TextXAlignment = Enum.TextXAlignment.Left,
@@ -3869,7 +3869,7 @@ local ClosureBindings = {
                 "TextLabel",
                 {
                     FontFace = Font.new "rbxasset://fonts/families/GothamSSm.json",
-                    Text = n,
+                    Text = Acrylic,
                     TextColor3 = Color3.fromRGB(200, 200, 200),
                     TextSize = 12,
                     TextWrapped = true,
@@ -3919,7 +3919,7 @@ local ClosureBindings = {
                     Size = UDim2.new(1, 0, 0, 0),
                     BackgroundTransparency = 0.89,
                     BackgroundColor3 = Color3.fromRGB(130, 130, 130),
-                    Parent = o,
+                    Parent = Assets,
                     AutomaticSize = Enum.AutomaticSize.Y,
                     Text = "",
                     LayoutOrder = 7,
@@ -3945,40 +3945,40 @@ local ClosureBindings = {
             function q.Destroy(r)
                 q.Frame:Destroy()
             end
-            q:SetTitle(m)
-            q:SetDesc(n)
+            q:SetTitle(Creator)
+            q:SetDesc(Acrylic)
             if p then
                 local r, s, t =
-                    h.Themes,
-                    j.SpringMotor(
-                        j.GetThemeProperty "ElementTransparency",
+                    UserInputService.Themes,
+                    Camera.SpringMotor(
+                        Camera.GetThemeProperty "ElementTransparency",
                         q.Frame,
                         "BackgroundTransparency",
                         false,
                         true
                     )
-                j.AddSignal(
+                Camera.AddSignal(
                     q.Frame.MouseEnter,
                     function()
-                        t(j.GetThemeProperty "ElementTransparency" - j.GetThemeProperty "HoverChange")
+                        t(Camera.GetThemeProperty "ElementTransparency" - Camera.GetThemeProperty "HoverChange")
                     end
                 )
-                j.AddSignal(
+                Camera.AddSignal(
                     q.Frame.MouseLeave,
                     function()
-                        t(j.GetThemeProperty "ElementTransparency")
+                        t(Camera.GetThemeProperty "ElementTransparency")
                     end
                 )
-                j.AddSignal(
+                Camera.AddSignal(
                     q.Frame.MouseButton1Down,
                     function()
-                        t(j.GetThemeProperty "ElementTransparency" + j.GetThemeProperty "HoverChange")
+                        t(Camera.GetThemeProperty "ElementTransparency" + Camera.GetThemeProperty "HoverChange")
                     end
                 )
-                j.AddSignal(
+                Camera.AddSignal(
                     q.Frame.MouseButton1Up,
                     function()
-                        t(j.GetThemeProperty "ElementTransparency" - j.GetThemeProperty "HoverChange")
+                        t(Camera.GetThemeProperty "ElementTransparency" - Camera.GetThemeProperty "HoverChange")
                     end
                 )
             end
@@ -3988,11 +3988,11 @@ local ClosureBindings = {
     [12] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(12)
         local h = script.Parent.Parent
-        local i, j, k = require(h.Packages.Flipper), require(h.Creator), require(h.Acrylic)
-        local springNew, instantNew, New, o = i.Spring.new, i.Instant.new, j.New, {}
+        local i, Creator, k = require(h.Packages.Flipper), require(h.Creator), require(h.Acrylic)
+        local springNew, instantNew, New, o = i.Spring.new, i.Instant.new, Creator.New, {}
         function o.Init(p, q)
-            o._screenGui = q
-            o.Holder =
+            New._screenGui = q
+            New.Holder =
                 New(
                 "Frame",
                 {
@@ -4014,17 +4014,17 @@ local ClosureBindings = {
                     )
                 }
             )
-            o._insideHolder = nil
+            New._insideHolder = nil
         end
         local function _getNotifyParent()
             local lib = require(h)
-            if not lib then return o.Holder end
-            if not lib.NotifyInsideWindow then return o.Holder end
+            if not lib then return New.Holder end
+            if not lib.NotifyInsideWindow then return New.Holder end
             local win = lib.Window
-            if not win or not win.AcrylicPaint or not win.AcrylicPaint.Frame then return o.Holder end
-            if win.Minimized then return o.Holder end
-            if not o._insideHolder then
-                o._insideHolder = New("Frame", {
+            if not win or not win.AcrylicPaint or not win.AcrylicPaint.Frame then return New.Holder end
+            if win.Minimized then return New.Holder end
+            if not New._insideHolder then
+                New._insideHolder = New("Frame", {
                     Position = UDim2.new(1, -10, 1, -10),
                     Size = UDim2.new(0, 280, 1, -52),
                     AnchorPoint = Vector2.new(1, 1),
@@ -4040,7 +4040,7 @@ local ClosureBindings = {
                     })
                 })
             end
-            return o._insideHolder
+            return New._insideHolder
         end
         function o.New(p, q)
             q.Title = q.Title or "Title"
@@ -4050,10 +4050,10 @@ local ClosureBindings = {
             q.Buttons = q.Buttons or {}
             local r = {Closed = false}
             local _acrylicOn = require(h).UseAcrylic
-            r.AcrylicPaint = k.AcrylicPaint(not _acrylicOn and {Light = true} or nil)
+            r.AcrylicPaint = Acrylic.AcrylicPaint(not _acrylicOn and {Light = true} or nil)
             r.AcrylicPaint.Frame.Size = UDim2.fromScale(1, 1)
             if not _acrylicOn then
-                j.OverrideTag(r.AcrylicPaint.Frame, {BackgroundColor3 = "AcrylicMain"})
+                Creator.OverrideTag(r.AcrylicPaint.Frame, {BackgroundColor3 = "AcrylicMain"})
                 r.AcrylicPaint.Frame.BackgroundTransparency = require(h).WindowTransparent and 0.35 or 0
             end
             r.Title =
@@ -4174,7 +4174,7 @@ local ClosureBindings = {
                     ThemeTag={ImageColor3="SubText"},
                 })
             })
-            j.AddSignal(notifCopyBtn.MouseButton1Click,function()
+            Creator.AddSignal(notifCopyBtn.MouseButton1Click,function()
                 pcall(function()
                     local txt = tostring(q.Content or "")
                     if tostring(q.SubContent or "")~="" then txt = txt.."\n"..q.SubContent end
@@ -4183,8 +4183,8 @@ local ClosureBindings = {
             end)
             local _notifyType = q.Type or "Info"
             local _defaultStripe = ({Warning=Color3.fromRGB(255,185,30),Success=Color3.fromRGB(50,205,80),Error=Color3.fromRGB(220,55,55),Info=Color3.fromRGB(76,194,255)})[_notifyType] or Color3.fromRGB(76,194,255)
-            local stripeCol = j.GetThemeProperty(_notifyType.."NotifyColor") or _defaultStripe
-            local notifyBg = j.GetThemeProperty(_notifyType.."NotifyBackground")
+            local stripeCol = Creator.GetThemeProperty(_notifyType.."NotifyColor") or _defaultStripe
+            local notifyBg = Creator.GetThemeProperty(_notifyType.."NotifyBackground")
             local stripe = New("Frame",{Size=UDim2.new(0,3,1,-16),Position=UDim2.new(0,6,0,8),BackgroundColor3=stripeCol,BorderSizePixel=0,ZIndex=10})
             New("UICorner",{CornerRadius=UDim.new(1,0),Parent=stripe})
             local notifRootChildren = {r.AcrylicPaint.Frame, r.Title, r.CloseButton, r.LabelHolder, stripe}
@@ -4233,7 +4233,7 @@ local ClosureBindings = {
                 r.SubContentLabel.Visible = false
             end
             local _notifyTargetHolder = _getNotifyParent()
-            local _isInsideWin = _notifyTargetHolder ~= o.Holder
+            local _isInsideWin = _notifyTargetHolder ~= New.Holder
             local _notifW = _isInsideWin and UDim2.new(1, 0, 0, 200) or UDim2.new(1, 0, 0, 200)
             r.Holder =
                 New("Frame", {BackgroundTransparency = 1, Size = _notifW, Parent = _notifyTargetHolder}, {r.Root})
@@ -4243,7 +4243,7 @@ local ClosureBindings = {
                     r.Root.Position = UDim2.new(t.Scale, t.Offset, 0, 0)
                 end
             )
-            j.AddSignal(
+            Creator.AddSignal(
                 r.CloseButton.MouseButton1Click,
                 function()
                     r:Close()
@@ -4288,8 +4288,8 @@ local ClosureBindings = {
     [13] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(13)
         local h = script.Parent.Parent
-        local i = require(h.Creator)
-        local j = i.New
+        local i = require(ModuleRoot.Creator)
+        local j = Creator.New
         return function(k, iconKey, l, favoriteable, favKey)
             if type(iconKey) ~= "string" then l = iconKey; iconKey = nil end
             local m = {}
@@ -4312,7 +4312,7 @@ local ClosureBindings = {
                 })
                 table.insert(secHeaderChildren, secIco)
                 task.defer(function()
-                    local lib = require(h)
+                    local lib = require(ModuleRoot)
                     local ic = lib and lib.GetIcon and lib:GetIcon(iconKey)
                     if ic then
                         if type(ic) == "table" then
@@ -4344,7 +4344,7 @@ local ClosureBindings = {
                 })
                 local function _setSecFavImage(active)
                     local iconName = active and "lucide/bookmark-check" or "lucide/bookmark"
-                    local lib2 = require(h)
+                    local lib2 = require(ModuleRoot)
                     local ic = lib2 and lib2.GetIcon and lib2:GetIcon(iconName)
                     if ic and type(ic) == "table" then
                         _secFavIco.Image = ic.Image or ""
@@ -4363,10 +4363,10 @@ local ClosureBindings = {
                         _secFavIco.ImageTransparency = 0.35
                     end
                 end
-                local _secIm = require(h).InterfaceManager
+                local _secIm = require(ModuleRoot).InterfaceManager
                 if _secIm then _setSecFavImage(_secIm:IsFavorite(favKey)) end
-                i.AddSignal(_secFavStar.MouseButton1Click, function()
-                    local im = require(h).InterfaceManager
+                Creator.AddSignal(_secFavStar.MouseButton1Click, function()
+                    local im = require(ModuleRoot).InterfaceManager
                     if not im then return end
                     local nowFav = im:IsFavorite(favKey)
                     im:SetFavorite(favKey, not nowFav)
@@ -4381,7 +4381,7 @@ local ClosureBindings = {
                 {BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 26), LayoutOrder = 7, Parent = l},
                 secHeaderChildren
             )
-            i.AddSignal(
+            Creator.AddSignal(
                 m.Layout:GetPropertyChangedSignal "AbsoluteContentSize",
                 function()
                     m.Container.Size = UDim2.new(1, 0, 0, m.Layout.AbsoluteContentSize.Y)
@@ -4394,12 +4394,12 @@ local ClosureBindings = {
     [14] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(14)
         local h = script.Parent.Parent
-        local i, j = require(h.Packages.Flipper), require(h.Creator)
+        local Creator, j = require(Flipper.Packages.Flipper), require(Flipper.Creator)
         local New, springNew, instantNew, n, o =
-            j.New,
-            i.Spring.new,
-            i.Instant.new,
-            h.Components,
+            Acrylic.New,
+            Creator.Spring.new,
+            Creator.Instant.new,
+            Flipper.Components,
             {Window = nil, Tabs = {}, Containers = {}, SelectedTab = 0, TabCount = 0}
         function o.Init(p, q)
             o.Window = q
@@ -4412,7 +4412,7 @@ local ClosureBindings = {
             return r - q
         end
         function o.ReapplyFavoriteOrder(p)
-            local im = require(h).InterfaceManager
+            local im = require(Flipper).InterfaceManager
             local favs = (im and im.GetFavorites and im:GetFavorites()) or {}
             local favIndex = {}
             for idx, nm in ipairs(favs) do favIndex[nm] = idx end
@@ -4438,7 +4438,7 @@ local ClosureBindings = {
             end)
         end
         function o.New(p, q, r, s, favoriteable)
-            local t, u = require(h), o.Window
+            local t, u = require(Flipper), o.Window
             local v = t.Elements
             o.TabCount = o.TabCount + 1
             o.ListOrderCounter = (o.ListOrderCounter or 0) + 1
@@ -4539,7 +4539,7 @@ local ClosureBindings = {
             )
             do
                 local sf = x.ContainerFrame
-                local scrollGui = (require(h).ScrollGUI) or (require(h).PopupGUI)
+                local scrollGui = (require(Flipper).ScrollGUI) or (require(Flipper).PopupGUI)
                 local sbHolder = Instance.new("Frame")
                 sbHolder.Name = "_SBOverlay"
                 sbHolder.BackgroundTransparency = 1
@@ -4562,7 +4562,7 @@ local ClosureBindings = {
                 local function updateScrollbar()
                     if not _alive then return end
                     pcall(function()
-                        local _libCheck = require(h)
+                        local _libCheck = require(Flipper)
                         if not _libCheck or _libCheck.Unloaded then
                             sbHolder.Visible = false
                             task.defer(_teardown)
@@ -4620,7 +4620,7 @@ local ClosureBindings = {
                 table.insert(_conns, sf.Changed:Connect(function(p)
                     if p == "CanvasSize" then updateScrollbar() end
                 end))
-                local _lib = require(h)
+                local _lib = require(Flipper)
                 if _lib and _lib.GUI then
                     table.insert(_conns, _lib.GUI.Destroying:Connect(_teardown))
                 end
@@ -4661,14 +4661,14 @@ local ClosureBindings = {
                 x._SBOverlay = sbHolder
                 x._SBOverlayTeardown = _teardown
                 pcall(function()
-                    local lib = require(h)
+                    local lib = require(Flipper)
                     lib._SBOverlays = lib._SBOverlays or {}
                     table.insert(lib._SBOverlays, sbHolder)
                     lib._SBOverlayTeardowns = lib._SBOverlayTeardowns or {}
                     table.insert(lib._SBOverlayTeardowns, _teardown)
                 end)
             end
-            j.AddSignal(
+            Acrylic.AddSignal(
                 y:GetPropertyChangedSignal "AbsoluteContentSize",
                 function()
                     x.ContainerFrame.CanvasSize = UDim2.new(0, 0, 0, y.AbsoluteContentSize.Y + 2)
@@ -4692,32 +4692,32 @@ local ClosureBindings = {
                     end
                 end)
             end)
-            x.Motor, x.SetTransparency = j.SpringMotor(1, x.Frame, "BackgroundTransparency")
-            j.AddSignal(
+            x.Motor, x.SetTransparency = Acrylic.SpringMotor(1, x.Frame, "BackgroundTransparency")
+            Acrylic.AddSignal(
                 x.Frame.MouseEnter,
                 function()
                     x.SetTransparency(x.Selected and 0.85 or 0.89)
                 end
             )
-            j.AddSignal(
+            Acrylic.AddSignal(
                 x.Frame.MouseLeave,
                 function()
                     x.SetTransparency(x.Selected and 0.89 or 1)
                 end
             )
-            j.AddSignal(
+            Acrylic.AddSignal(
                 x.Frame.MouseButton1Down,
                 function()
                     x.SetTransparency(0.92)
                 end
             )
-            j.AddSignal(
+            Acrylic.AddSignal(
                 x.Frame.MouseButton1Up,
                 function()
                     x.SetTransparency(x.Selected and 0.85 or 0.89)
                 end
             )
-            j.AddSignal(
+            Acrylic.AddSignal(
                 x.Frame.MouseButton1Click,
                 function()
                     o:SelectTab(w)
@@ -4770,7 +4770,7 @@ local ClosureBindings = {
                 local im2 = _lib and _lib.InterfaceManager
                 if im2 then _updateFavIcon(im2:IsFavorite(q)) end
             end
-            j.AddSignal(_favStar.MouseButton1Click, function()
+            Acrylic.AddSignal(_favStar.MouseButton1Click, function()
                 local im = _lib and _lib.InterfaceManager
                 if not im then return end
                 local nowFav = im:IsFavorite(q)
@@ -4833,7 +4833,7 @@ local ClosureBindings = {
                     Parent = emptyInner,
                 })
                 task.defer(function()
-                    local _lib2 = require(h)
+                    local _lib2 = require(Flipper)
                     if _lib2 and _lib2.GetIcon then
                         local ic = _lib2:GetIcon("solar/sad-circle-bold-duotone")
                         if ic and type(ic) == "table" then
@@ -4857,9 +4857,9 @@ local ClosureBindings = {
                     end
                     emptyOverlay.Visible = tabVisible and (childCount <= 0)
                 end
-                j.AddSignal(x.ContainerFrame:GetPropertyChangedSignal("Visible"), syncEmptyOverlay)
-                j.AddSignal(x.ContainerFrame.ChildAdded, syncEmptyOverlay)
-                j.AddSignal(x.ContainerFrame.ChildRemoved, syncEmptyOverlay)
+                Acrylic.AddSignal(x.ContainerFrame:GetPropertyChangedSignal("Visible"), syncEmptyOverlay)
+                Acrylic.AddSignal(x.ContainerFrame.ChildAdded, syncEmptyOverlay)
+                Acrylic.AddSignal(x.ContainerFrame.ChildRemoved, syncEmptyOverlay)
                 x._emptyOverlay = emptyOverlay
                 x._emptyTitleLbl = emptyTitle
                 x._emptySubLbl = emptySub
@@ -4870,7 +4870,7 @@ local ClosureBindings = {
                     if cfg2.Text then emptyTitle.Text = cfg2.Text end
                     if cfg2.SubText then emptySub.Text = cfg2.SubText end
                     if cfg2.Icon then
-                        local _lib3 = require(h)
+                        local _lib3 = require(Flipper)
                         if _lib3 and _lib3.GetIcon then
                             local ic2 = _lib3:GetIcon(cfg2.Icon)
                             if ic2 and type(ic2) == "table" then
@@ -5190,7 +5190,7 @@ local ClosureBindings = {
             )
         end
         function o.NewHeader(p, q, r, s)
-            local t2 = require(h)
+            local t2 = require(Flipper)
             local elemMeta = t2.Elements
             local win = o.Window
             local holder = win and win._headerTabHolder
@@ -5244,7 +5244,7 @@ local ClosureBindings = {
                 ClipsDescendants = true,
                 Parent = holder,
             }, {New("UICorner", {CornerRadius = UDim.new(0, 6)})})
-            j.AddThemeObject(ht.BgFrame, {BackgroundColor3 = "Tab"})
+            Acrylic.AddThemeObject(ht.BgFrame, {BackgroundColor3 = "Tab"})
             ht.IconImg = New("ImageLabel", {
                 Name = "_HTIcon",
                 Size = UDim2.fromOffset(16, 16),
@@ -5255,7 +5255,7 @@ local ClosureBindings = {
                 ZIndex = 2,
                 Parent = ht.BgFrame,
             })
-            j.AddThemeObject(ht.IconImg, {ImageColor3 = "IconColor"})
+            Acrylic.AddThemeObject(ht.IconImg, {ImageColor3 = "IconColor"})
             if r then
                 if type(r) == "table" then
                     ht.IconImg.Image = r.Image or ""
@@ -5279,7 +5279,7 @@ local ClosureBindings = {
                 ZIndex = 2,
                 Parent = ht.BgFrame,
             })
-            j.AddThemeObject(ht.Label, {TextColor3 = "Text"})
+            Acrylic.AddThemeObject(ht.Label, {TextColor3 = "Text"})
             local hitBox = New("TextButton", {
                 Name = "_HTHit",
                 Size = UDim2.fromScale(1, 1),
@@ -5313,7 +5313,7 @@ local ClosureBindings = {
                     PaddingBottom = UDim.new(0, 4),
                 }),
             })
-            j.AddSignal(listLayout2:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+            Acrylic.AddSignal(listLayout2:GetPropertyChangedSignal("AbsoluteContentSize"), function()
                 ht.ContainerFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout2.AbsoluteContentSize.Y + 2)
             end)
             ht.ContainerFrame.ChildAdded:Connect(function()
@@ -5411,9 +5411,9 @@ local ClosureBindings = {
                     end
                     htEmptyOverlay.Visible = tabVisible and (childCount <= 0)
                 end
-                j.AddSignal(ht.ContainerFrame:GetPropertyChangedSignal("Visible"), htSyncEmpty)
-                j.AddSignal(ht.ContainerFrame.ChildAdded, htSyncEmpty)
-                j.AddSignal(ht.ContainerFrame.ChildRemoved, htSyncEmpty)
+                Acrylic.AddSignal(ht.ContainerFrame:GetPropertyChangedSignal("Visible"), htSyncEmpty)
+                Acrylic.AddSignal(ht.ContainerFrame.ChildAdded, htSyncEmpty)
+                Acrylic.AddSignal(ht.ContainerFrame.ChildRemoved, htSyncEmpty)
                 ht._emptyOverlay = htEmptyOverlay
                 ht._emptyTitleLbl = htEmptyTitle
                 ht._emptySubLbl = htEmptySub
@@ -5632,14 +5632,14 @@ local ClosureBindings = {
                 if ht._emptyOverlay then ht._emptyOverlay:Destroy() end
             end
             setmetatable(ht, elemMeta)
-            j.AddSignal(hitBox.MouseEnter, function()
+            Acrylic.AddSignal(hitBox.MouseEnter, function()
                 ht._hovering = true
                 twHt(ht.BgFrame, {Size = UDim2.fromOffset(fullW, 28)}, 0.18)
                 twHt(ht.IconImg, {Position = UDim2.new(0, 8, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5)}, 0.18)
                 twHt(ht.Label, {TextTransparency = ht.Selected and 0 or 0.35}, 0.18)
                 twHt(ht.IconImg, {ImageTransparency = 0}, 0.18)
             end)
-            j.AddSignal(hitBox.MouseLeave, function()
+            Acrylic.AddSignal(hitBox.MouseLeave, function()
                 ht._hovering = false
                 if ht.Selected then return end
                 twHt(ht.BgFrame, {Size = UDim2.fromOffset(36, 28)}, 0.2)
@@ -5647,7 +5647,7 @@ local ClosureBindings = {
                 twHt(ht.Label, {TextTransparency = 1}, 0.18)
                 twHt(ht.IconImg, {ImageTransparency = 0.5}, 0.18)
             end)
-            j.AddSignal(hitBox.MouseButton1Click, function()
+            Acrylic.AddSignal(hitBox.MouseButton1Click, function()
                 o:SelectTab(tabIdx)
             end)
             if o.TabCount == 1 then
@@ -5659,9 +5659,9 @@ local ClosureBindings = {
     end,
     [15] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(15)
-        local h, i = game:GetService "TextService", script.Parent.Parent
-        local j, k = require(i.Packages.Flipper), require(i.Creator)
-        local l = k.New
+        local UserInputService, i = game:GetService "TextService", script.Parent.Parent
+        local Camera, k = require(Mouse.Packages.Flipper), require(Mouse.Creator)
+        local l = ModuleRoot.New
         return function(m, n)
             n = n or false
             local o = {}
@@ -5710,7 +5710,7 @@ local ClosureBindings = {
                 {
                     Size = UDim2.new(0, 0, 0, 30),
                     BackgroundTransparency = n and 0.9 or 0,
-                    Parent = m,
+                    Parent = Creator,
                     ThemeTag = {BackgroundColor3 = n and "Input" or "DialogInput"}
                 },
                 {
@@ -5735,7 +5735,7 @@ local ClosureBindings = {
                     local r = o.Input.CursorPosition
                     if r ~= -1 then
                         local s = string.sub(o.Input.Text, 1, r - 1)
-                        local t = h:GetTextSize(s, o.Input.TextSize, o.Input.Font, Vector2.new(math.huge, math.huge)).X
+                        local t = UserInputService:GetTextSize(s, o.Input.TextSize, o.Input.Font, Vector2.new(math.huge, math.huge)).X
                         local u = o.Input.Position.X.Offset + t
                         if u < p then
                             o.Input.Position = UDim2.fromOffset(p - t, 0)
@@ -5746,28 +5746,28 @@ local ClosureBindings = {
                 end
             end
             task.spawn(p)
-            k.AddSignal(o.Input:GetPropertyChangedSignal "Text", p)
-            k.AddSignal(o.Input:GetPropertyChangedSignal "CursorPosition", p)
-            k.AddSignal(
+            ModuleRoot.AddSignal(o.Input:GetPropertyChangedSignal "Text", p)
+            ModuleRoot.AddSignal(o.Input:GetPropertyChangedSignal "CursorPosition", p)
+            ModuleRoot.AddSignal(
                 o.Input.Focused,
                 function()
                     p()
                     o.Indicator.Size = UDim2.new(1, -2, 0, 2)
                     o.Indicator.Position = UDim2.new(0, 1, 1, 0)
                     o.Indicator.BackgroundTransparency = 0
-                    k.OverrideTag(o.Frame, {BackgroundColor3 = n and "InputFocused" or "DialogHolder"})
-                    k.OverrideTag(o.Indicator, {BackgroundColor3 = "Accent"})
+                    ModuleRoot.OverrideTag(o.Frame, {BackgroundColor3 = n and "InputFocused" or "DialogHolder"})
+                    ModuleRoot.OverrideTag(o.Indicator, {BackgroundColor3 = "Accent"})
                 end
             )
-            k.AddSignal(
+            ModuleRoot.AddSignal(
                 o.Input.FocusLost,
                 function()
                     p()
                     o.Indicator.Size = UDim2.new(1, -4, 0, 1)
                     o.Indicator.Position = UDim2.new(0, 2, 1, 0)
                     o.Indicator.BackgroundTransparency = 0.5
-                    k.OverrideTag(o.Frame, {BackgroundColor3 = n and "Input" or "DialogInput"})
-                    k.OverrideTag(o.Indicator, {BackgroundColor3 = n and "InputIndicator" or "DialogInputLine"})
+                    ModuleRoot.OverrideTag(o.Frame, {BackgroundColor3 = n and "Input" or "DialogInput"})
+                    ModuleRoot.OverrideTag(o.Indicator, {BackgroundColor3 = n and "InputIndicator" or "DialogInputLine"})
                 end
             )
             return o
@@ -5775,13 +5775,13 @@ local ClosureBindings = {
     end,
     [16] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(16)
-        local h, i = script.Parent.Parent, require(script.Parent.Assets)
-        local j, k = require(h.Creator), require(h.Packages.Flipper)
-        local New, m = j.New, j.AddSignal
+        local Flipper, i = script.Parent.Parent, require(script.Parent.Assets)
+        local Acrylic, k = require(Flipper.Creator), require(Flipper.Packages.Flipper)
+        local New, m = Acrylic.New, Acrylic.AddSignal
         return function(n)
             local o, p, q =
                 {},
-                require(h),
+                require(Flipper),
                 function(o, p, q, r)
                     local s = {
                         Callback = r or function()
@@ -5815,7 +5815,7 @@ local ClosureBindings = {
                             )
                         }
                     )
-                    local t, u = j.SpringMotor(1, s.Frame, "BackgroundTransparency")
+                    local t, u = Acrylic.SpringMotor(1, s.Frame, "BackgroundTransparency")
                     creatorAddSignal(
                         s.Frame.MouseEnter,
                         function()
@@ -6088,7 +6088,7 @@ local ClosureBindings = {
             end
             o.CloseButton =
                 q(
-                i.Close,
+                Creator.Close,
                 UDim2.new(1, -4, 0, 4),
                 o.Frame,
                 function()
@@ -6109,7 +6109,7 @@ local ClosureBindings = {
             )
             o.MaxButton =
                 q(
-                i.Max,
+                Creator.Max,
                 UDim2.new(1, -40, 0, 4),
                 o.Frame,
                 function()
@@ -6118,7 +6118,7 @@ local ClosureBindings = {
             )
             o.MinButton =
                 q(
-                i.Min,
+                Creator.Min,
                 UDim2.new(1, -80, 0, 4),
                 o.Frame,
                 function()
@@ -6163,7 +6163,7 @@ local ClosureBindings = {
                     pc = "Desktop PC", laptop = "Laptop", smartphone = "Mobile",
                     tablet = "Tablet", console = "Console",
                 }
-                local _devBadge = j.New("Frame", {
+                local _devBadge = Acrylic.New("Frame", {
                     Name             = "_DeviceBadge",
                     Size             = UDim2.fromOffset(80, 22),
                     Position         = UDim2.new(1, -168, 0, 9),
@@ -6172,7 +6172,7 @@ local ClosureBindings = {
                     ZIndex           = 4,
                     Parent           = o.Frame,
                 })
-                local _devIco = j.New("ImageLabel", {
+                local _devIco = Acrylic.New("ImageLabel", {
                     Name             = "_DevIco",
                     Size             = UDim2.fromOffset(14, 14),
                     Position         = UDim2.fromOffset(0, 4),
@@ -6182,7 +6182,7 @@ local ClosureBindings = {
                     ThemeTag         = {ImageColor3 = "SubText"},
                     Parent           = _devBadge,
                 })
-                local _devText = j.New("TextLabel", {
+                local _devText = Acrylic.New("TextLabel", {
                     Name             = "_DevText",
                     Size             = UDim2.new(1, -20, 1, 0),
                     Position         = UDim2.fromOffset(18, 0),
@@ -6198,7 +6198,7 @@ local ClosureBindings = {
                     Parent           = _devBadge,
                 })
                 task.defer(function()
-                    local lib = require(h)
+                    local lib = require(Flipper)
                     if lib and lib.GetIcon then
                         local ic = lib:GetIcon(_devIcon)
                         if ic and type(ic) == "table" then
@@ -6216,15 +6216,15 @@ local ClosureBindings = {
     end,
     [17] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(17)
-        local h, i, j, k =
+        local UserInputService, Mouse, Camera, k =
             game:GetService "UserInputService",
             game:GetService "Players".LocalPlayer:GetMouse(),
             game:GetService "Workspace".CurrentCamera,
             script.Parent.Parent
-        local l, m, n, o, p = require(k.Packages.Flipper), require(k.Creator), require(k.Acrylic), require(script.Parent.Assets), script.Parent
-        local springNew, instantNew, CreatorNew = l.Spring.new, l.Instant.new, m.New
+        local l, Creator, Acrylic, Assets, p = require(k.Packages.Flipper), require(k.Creator), require(k.Acrylic), require(script.Parent.Assets), script.Parent
+        local springNew, instantNew, CreatorNew = l.Spring.new, l.Instant.new, Creator.New
         return function(t)
-            local u, v, w, x, y, z =
+            local u, windowState, w, x, y, z =
                 require(k),
                 {
                     Minimized = false,
@@ -6232,14 +6232,14 @@ local ClosureBindings = {
                     Size = t.Size,
                     CurrentPos = 0,
                     Position = UDim2.fromOffset(
-                        j.ViewportSize.X / 2 - t.Size.X.Offset / 2,
-                        j.ViewportSize.Y / 2 - t.Size.Y.Offset / 2
+                        Camera.ViewportSize.X / 2 - t.Size.X.Offset / 2,
+                        Camera.ViewportSize.Y / 2 - t.Size.Y.Offset / 2
                     )
                 },
                 false
             local A, B = false
             local C = false
-            v.AcrylicPaint = n.AcrylicPaint()
+            windowState.AcrylicPaint = Acrylic.AcrylicPaint()
             local D, E =
                 CreatorNew(
                     "Frame",
@@ -6264,7 +6264,7 @@ local ClosureBindings = {
             local sidebarChildren = {}
 
             local function mkCorner(r) return CreatorNew("UICorner",{CornerRadius=UDim.new(0,r)}) end
-            local function mkStroke(t2,thk) return CreatorNew("UIStroke",{Transparency=t2,Thickness=thk or tonumber(m.GetThemeProperty("ElementBorderThickness")) or 1,ThemeTag={Color="InElementBorder"}}) end
+            local function mkStroke(t2,thk) return CreatorNew("UIStroke",{Transparency=t2,Thickness=thk or tonumber(Creator.GetThemeProperty("ElementBorderThickness")) or 1,ThemeTag={Color="InElementBorder"}}) end
 
             if t.TabLogo then
                 local logoH = 110
@@ -6323,7 +6323,7 @@ local ClosureBindings = {
 
                 local panel = CreatorNew("Frame",{
                     Name="UserInfoTop",
-                    Size=UDim2.new(1,0,0,h),
+                    Size=UDim2.new(1,0,0,UserInputService),
                     Position=UDim2.fromOffset(0,topOffset),
                     BackgroundTransparency=0.78,
                     ZIndex=2,
@@ -6429,7 +6429,7 @@ local ClosureBindings = {
                                 end
                             end
                             applyAnoIcon(anonActive)
-                            m.AddSignal(eyeBtn.MouseButton1Click, function()
+                            Creator.AddSignal(eyeBtn.MouseButton1Click, function()
                                 anonActive = not anonActive
                                 if dnLbl then dnLbl.Text = anonActive and anoTitle or realDisplayName end
                                 if unLbl then unLbl.Text = anonActive and anoSubtitle or realUsername end
@@ -6445,11 +6445,11 @@ local ClosureBindings = {
                     local dnLbl2 = panel:FindFirstChild("DisplayName")
                     local unLbl2 = panel:FindFirstChild("Username")
                     if dnLbl2 then
-                        m.Registry[dnLbl2] = nil
+                        Creator.Registry[dnLbl2] = nil
                         dnLbl2.TextColor3 = _uic
                     end
                     if unLbl2 then
-                        m.Registry[unLbl2] = nil
+                        Creator.Registry[unLbl2] = nil
                         unLbl2.TextColor3 = _uic
                     end
                 end
@@ -6497,7 +6497,7 @@ local ClosureBindings = {
                 end)
             end
 
-            v._tabTopOffset = topOffset
+            windowState._tabTopOffset = topOffset
 
             if t.UserInfo then
                 local lp2 = game:GetService("Players").LocalPlayer
@@ -6614,7 +6614,7 @@ local ClosureBindings = {
                         setEyeIcon2(false)
                         local dn2Lbl = bot:FindFirstChild("DisplayName")
                         local un2Lbl = bot:FindFirstChild("Username")
-                        m.AddSignal(eyeBtn2.MouseButton1Click, function()
+                        Creator.AddSignal(eyeBtn2.MouseButton1Click, function()
                             anonActive2 = not anonActive2
                             if dn2Lbl then dn2Lbl.Text = anonActive2 and "Anonymous" or realDN2 end
                             if un2Lbl then un2Lbl.Text = anonActive2 and "@•••••••" or realUN2 end
@@ -6627,11 +6627,11 @@ local ClosureBindings = {
                     local dnLbl3 = bot:FindFirstChild("DisplayName")
                     local unLbl3 = bot:FindFirstChild("Username")
                     if dnLbl3 then
-                        m.Registry[dnLbl3] = nil
+                        Creator.Registry[dnLbl3] = nil
                         dnLbl3.TextColor3 = _uic2
                     end
                     if unLbl3 then
-                        m.Registry[unLbl3] = nil
+                        Creator.Registry[unLbl3] = nil
                         unLbl3.TextColor3 = _uic2
                     end
                 end
@@ -6639,7 +6639,7 @@ local ClosureBindings = {
             end
 
             local _tabListLayout = CreatorNew("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder})
-            v.TabListContainer = CreatorNew(
+            windowState.TabListContainer = CreatorNew(
                 "Frame",
                 {
                     Size = UDim2.new(1, 0, 0, 0),
@@ -6648,7 +6648,7 @@ local ClosureBindings = {
                 },
                 {_tabListLayout}
             )
-            v.TabHolder =
+            windowState.TabHolder =
                 CreatorNew(
                 "ScrollingFrame",
                 {
@@ -6664,21 +6664,21 @@ local ClosureBindings = {
                     ScrollingDirection = Enum.ScrollingDirection.Y,
                     ClipsDescendants = true,
                 },
-                {v.TabListContainer, D}
+                {windowState.TabListContainer, D}
             )
-            table.insert(sidebarChildren, v.TabHolder)
+            table.insert(sidebarChildren, windowState.TabHolder)
 
             local listLayout = _tabListLayout
             if listLayout then
                 listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                    v.TabHolder.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
+                    windowState.TabHolder.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
                 end)
             end
 
             if searchBox then
                 local allElements = {}
-                v.AllElements = allElements
-                v.SearchBox = searchBox
+                windowState.AllElements = allElements
+                windowState.SearchBox = searchBox
 
 
                 local function findSectionContainer(sec)
@@ -6692,7 +6692,7 @@ local ClosureBindings = {
 
                 local function scrollToFirstVisible()
                     task.wait(0.05)
-                    for _, cf in pairs(v.ContainerClip and v.ContainerClip:GetChildren() or {}) do
+                    for _, cf in pairs(windowState.ContainerClip and windowState.ContainerClip:GetChildren() or {}) do
                         if cf:IsA("ScrollingFrame") then
                             for _, sec in pairs(cf:GetChildren()) do
                                 if sec:IsA("Frame") and sec.Visible and findSectionContainer(sec) then
@@ -6771,13 +6771,13 @@ local ClosureBindings = {
                     local q = (searchBox.Text or ""):lower():gsub("^%s+",""):gsub("%s+$","")
                     local blank = q == ""
 
-                    for _, tabBtn in pairs(v.TabListContainer:GetChildren()) do
+                    for _, tabBtn in pairs(windowState.TabListContainer:GetChildren()) do
                         if tabBtn:IsA("TextButton") then tabBtn.Visible = true end
                     end
 
                     if blank then
                         clearAllHighlights()
-                        for _, cf in pairs(v.ContainerClip and v.ContainerClip:GetChildren() or {}) do
+                        for _, cf in pairs(windowState.ContainerClip and windowState.ContainerClip:GetChildren() or {}) do
                             if cf:IsA("ScrollingFrame") then
                                 for _, sec in pairs(cf:GetChildren()) do
                                     if sec:IsA("Frame") then
@@ -6803,7 +6803,7 @@ local ClosureBindings = {
 
                     task.delay(0.01, function()
                         clearAllHighlights()
-                        for _, cf in pairs(v.ContainerClip and v.ContainerClip:GetChildren() or {}) do
+                        for _, cf in pairs(windowState.ContainerClip and windowState.ContainerClip:GetChildren() or {}) do
                             if cf:IsA("ScrollingFrame") then
                                 for _, sec in pairs(cf:GetChildren()) do
                                     if sec:IsA("Frame") and findSectionContainer(sec) then
@@ -6844,7 +6844,7 @@ local ClosureBindings = {
                     end)
                 end
 
-                v.RefreshSearchFilter = applySearchFilter
+                windowState.RefreshSearchFilter = applySearchFilter
                 searchBox:GetPropertyChangedSignal("Text"):Connect(applySearchFilter)
 
                 game:GetService("UserInputService").InputBegan:Connect(function(inp, gp)
@@ -6868,9 +6868,9 @@ local ClosureBindings = {
                 },
                 sidebarChildren
             )
-            v.TabDisplayIcon = nil
-            v.TabDisplay = nil
-            v.ContainerHolder =
+            windowState.TabDisplayIcon = nil
+            windowState.TabDisplay = nil
+            windowState.ContainerHolder =
                 CreatorNew(
                 "CanvasGroup",
                 {
@@ -6880,24 +6880,24 @@ local ClosureBindings = {
                     ClipsDescendants = true,
                 }
             )
-            v.ContainerClip =
+            windowState.ContainerClip =
                 CreatorNew(
                 "Frame",
                 {
                     Size = UDim2.fromScale(1, 1),
                     BackgroundTransparency = 1,
                     ClipsDescendants = true,
-                    Parent = v.ContainerHolder,
+                    Parent = windowState.ContainerHolder,
                 },
                 {CreatorNew("UICorner", {CornerRadius = UDim.new(0, 10)})}
             )
-            v.Root =
+            windowState.Root =
                 CreatorNew(
                 "Frame",
-                {BackgroundTransparency = 1, Size = v.Size, Position = v.Position, Parent = t.Parent},
-                {v.AcrylicPaint.Frame, v.ContainerHolder, F, E}
+                {BackgroundTransparency = 1, Size = windowState.Size, Position = windowState.Position, Parent = t.Parent},
+                {windowState.AcrylicPaint.Frame, windowState.ContainerHolder, F, E}
             )
-            v.TitleBar = require(script.Parent.TitleBar) {Title = t.Title, SubTitle = t.SubTitle, Parent = v.Root, Window = v, Icon = t.TitleIcon, Version = t.Version, Tags = t.Tags}
+            windowState.TitleBar = require(script.Parent.TitleBar) {Title = t.Title, SubTitle = t.SubTitle, Parent = windowState.Root, Window = windowState, Icon = t.TitleIcon, Version = t.Version, Tags = t.Tags}
             local _tbExpandedForTabs = false
             local function _expandTitleBarForTabsSearch()
                 if _tbExpandedForTabs then return end
@@ -6906,105 +6906,105 @@ local ClosureBindings = {
 
 
                 local tabRow1CY = 21
-                v.TitleBar.Frame.Size = UDim2.new(1, 0, 0, 42)
-                v._headerTabHolder.AnchorPoint = Vector2.new(0.5, 0.5)
-                v._headerTabHolder.Position    = UDim2.new(0.5, 0, 0, tabRow1CY)
+                windowState.TitleBar.Frame.Size = UDim2.new(1, 0, 0, 42)
+                windowState._headerTabHolder.AnchorPoint = Vector2.new(0.5, 0.5)
+                windowState._headerTabHolder.Position    = UDim2.new(0.5, 0, 0, tabRow1CY)
                 local _selAbsY = 40
-                v._headerSelY  = _selAbsY
-                v._headerSelectorFrame.AnchorPoint = Vector2.new(0.5, 0)
-                v._headerSelectorFrame.Position    = UDim2.new(0, 0, 0, _selAbsY)
-                local F2 = v.Root:FindFirstChild("_SidebarFrame")
+                windowState._headerSelY  = _selAbsY
+                windowState._headerSelectorFrame.AnchorPoint = Vector2.new(0.5, 0)
+                windowState._headerSelectorFrame.Position    = UDim2.new(0, 0, 0, _selAbsY)
+                local F2 = windowState.Root:FindFirstChild("_SidebarFrame")
                 if F2 then
                     F2.Position = UDim2.new(0, 12, 0, 54)
                     F2.Size     = UDim2.new(0, t.TabWidth, 1, -66)
                 end
-                v.ContainerHolder.Position = UDim2.fromOffset(t.TabWidth + 26, 54)
-                v.ContainerHolder.Size     = UDim2.new(1, -t.TabWidth - 32, 1, -66)
+                windowState.ContainerHolder.Position = UDim2.fromOffset(t.TabWidth + 26, 54)
+                windowState.ContainerHolder.Size     = UDim2.new(1, -t.TabWidth - 32, 1, -66)
             end
-            v._expandTitleBarForTabsSearch = _expandTitleBarForTabsSearch
+            windowState._expandTitleBarForTabsSearch = _expandTitleBarForTabsSearch
             if require(k).UseAcrylic then
-                v.AcrylicPaint.AddParent(v.Root)
+                windowState.AcrylicPaint.AddParent(windowState.Root)
             end
             local G, H =
-                l.GroupMotor.new {X = v.Size.X.Offset, Y = v.Size.Y.Offset},
-                l.GroupMotor.new {X = v.Position.X.Offset, Y = v.Position.Y.Offset}
-            v.SelectorPosMotor = l.SingleMotor.new(17)
-            v.SelectorSizeMotor = l.SingleMotor.new(0)
-            v.ContainerBackMotor = l.SingleMotor.new(0)
-            v.ContainerPosMotor = l.SingleMotor.new(54)
+                l.GroupMotor.new {X = windowState.Size.X.Offset, Y = windowState.Size.Y.Offset},
+                l.GroupMotor.new {X = windowState.Position.X.Offset, Y = windowState.Position.Y.Offset}
+            windowState.SelectorPosMotor = l.SingleMotor.new(17)
+            windowState.SelectorSizeMotor = l.SingleMotor.new(0)
+            windowState.ContainerBackMotor = l.SingleMotor.new(0)
+            windowState.ContainerPosMotor = l.SingleMotor.new(54)
             G:onStep(
                 function(I)
-                    v.Root.Size = UDim2.new(0, math.round(I.X), 0, math.round(I.Y))
+                    windowState.Root.Size = UDim2.new(0, math.round(I.X), 0, math.round(I.Y))
                 end
             )
             H:onStep(
                 function(I)
-                    v.Root.Position = UDim2.new(0, math.round(I.X), 0, math.round(I.Y))
+                    windowState.Root.Position = UDim2.new(0, math.round(I.X), 0, math.round(I.Y))
                 end
             )
             local I, J = 0, 0
-            v.SelectorPosMotor:onStep(
+            windowState.SelectorPosMotor:onStep(
                 function(K)
-                    local canvasY = (v.TabHolder and v.TabHolder.CanvasPosition.Y) or 0
+                    local canvasY = (windowState.TabHolder and windowState.TabHolder.CanvasPosition.Y) or 0
                     D.Position = UDim2.new(0, 0, 0, K + 17 + canvasY)
                     local L = tick()
                     local M = L - J
                     if I ~= nil then
-                        v.SelectorSizeMotor:setGoal(springNew((math.abs(K - I) / (M * 60)) + 16))
+                        windowState.SelectorSizeMotor:setGoal(springNew((math.abs(K - I) / (M * 60)) + 16))
                         I = K
                     end
                     J = L
                 end
             )
-            v.SelectorSizeMotor:onStep(
+            windowState.SelectorSizeMotor:onStep(
                 function(K)
                     D.Size = UDim2.new(0, 4, 0, K)
                 end
             )
-            v.ContainerBackMotor:onStep(
+            windowState.ContainerBackMotor:onStep(
                 function(K)
-                    v.ContainerHolder.GroupTransparency = K
+                    windowState.ContainerHolder.GroupTransparency = K
                 end
             )
-            v.ContainerPosMotor:onStep(
+            windowState.ContainerPosMotor:onStep(
                 function(K)
-                    v.ContainerHolder.Position = UDim2.fromOffset(t.TabWidth + 26, K)
+                    windowState.ContainerHolder.Position = UDim2.fromOffset(t.TabWidth + 26, K)
                 end
             )
             local K, L
-            v.Maximize = function(M, N, O)
-                local wasMaximized = v.Maximized
-                v.Maximized = M
-                v.TitleBar.MaxButton.Frame.Icon.Image = M and o.Restore or o.Max
+            windowState.Maximize = function(M, N, O)
+                local wasMaximized = windowState.Maximized
+                windowState.Maximized = M
+                windowState.TitleBar.MaxButton.Frame.Icon.Image = M and Assets.Restore or Assets.Max
                 if M and not wasMaximized then
-                    K = v.Size.X.Offset
-                    L = v.Size.Y.Offset
+                    K = windowState.Size.X.Offset
+                    L = windowState.Size.Y.Offset
                 end
-                local P, Q = M and j.ViewportSize.X or K, M and j.ViewportSize.Y or L
+                local P, Q = M and Camera.ViewportSize.X or K, M and Camera.ViewportSize.Y or L
                 G:setGoal {
                     X = l[O and "Instant" or "Spring"].new(P, {frequency = 6}),
                     Y = l[O and "Instant" or "Spring"].new(Q, {frequency = 6})
                 }
-                v.Size = UDim2.fromOffset(P, Q)
+                windowState.Size = UDim2.fromOffset(P, Q)
                 if not N then
                     H:setGoal {
-                        X = springNew(M and 0 or v.Position.X.Offset, {frequency = 6}),
-                        Y = springNew(M and 0 or v.Position.Y.Offset, {frequency = 6})
+                        X = springNew(M and 0 or windowState.Position.X.Offset, {frequency = 6}),
+                        Y = springNew(M and 0 or windowState.Position.Y.Offset, {frequency = 6})
                     }
                 end
             end
-            m.AddSignal(
-                v.TitleBar.Frame.InputBegan,
+            Creator.AddSignal(
+                windowState.TitleBar.Frame.InputBegan,
                 function(M)
                     if M.UserInputType == Enum.UserInputType.MouseButton1 or M.UserInputType == Enum.UserInputType.Touch then
                         w = true
                         y = M.Position
-                        z = v.Root.Position
-                        if v.Maximized then
+                        z = windowState.Root.Position
+                        if windowState.Maximized then
                             z =
                                 UDim2.fromOffset(
-                                i.X - (i.X * ((K - 100) / v.Root.AbsoluteSize.X)),
-                                i.Y - (i.Y * (L / v.Root.AbsoluteSize.Y))
+                                Mouse.X - (Mouse.X * ((K - 100) / windowState.Root.AbsoluteSize.X)),
+                                Mouse.Y - (Mouse.Y * (L / windowState.Root.AbsoluteSize.Y))
                             )
                         end
                         M.Changed:Connect(
@@ -7017,8 +7017,8 @@ local ClosureBindings = {
                     end
                 end
             )
-            m.AddSignal(
-                v.TitleBar.Frame.InputChanged,
+            Creator.AddSignal(
+                windowState.TitleBar.Frame.InputChanged,
                 function(M)
                     if
                         M.UserInputType == Enum.UserInputType.MouseMovement or
@@ -7028,7 +7028,7 @@ local ClosureBindings = {
                     end
                 end
             )
-            m.AddSignal(
+            Creator.AddSignal(
                 E.InputBegan,
                 function(M)
                     if M.UserInputType == Enum.UserInputType.MouseButton1 or M.UserInputType == Enum.UserInputType.Touch then
@@ -7037,15 +7037,15 @@ local ClosureBindings = {
                     end
                 end
             )
-            m.AddSignal(
-                h.InputChanged,
+            Creator.AddSignal(
+                UserInputService.InputChanged,
                 function(M)
                     if M == x and w then
                         local N = M.Position - y
-                        v.Position = UDim2.fromOffset(z.X.Offset + N.X, z.Y.Offset + N.Y)
-                        H:setGoal {X = instantNew(v.Position.X.Offset), Y = instantNew(v.Position.Y.Offset)}
-                        if v.Maximized then
-                            v.Maximize(false, true, true)
+                        windowState.Position = UDim2.fromOffset(z.X.Offset + N.X, z.Y.Offset + N.Y)
+                        H:setGoal {X = instantNew(windowState.Position.X.Offset), Y = instantNew(windowState.Position.Y.Offset)}
+                        if windowState.Maximized then
+                            windowState.Maximize(false, true, true)
                         end
                     end
                     if
@@ -7053,65 +7053,65 @@ local ClosureBindings = {
                             M.UserInputType == Enum.UserInputType.Touch) and
                             A
                      then
-                        local N, O = M.Position - B, v.Size
+                        local N, O = M.Position - B, windowState.Size
                         local P = Vector3.new(O.X.Offset, O.Y.Offset, 0) + Vector3.new(1, 1, 0) * N
                         local Q = Vector2.new(math.clamp(P.X, 470, 2048), math.clamp(P.Y, 380, 2048))
                         G:setGoal {X = l.Instant.new(Q.X), Y = l.Instant.new(Q.Y)}
                     end
                 end
             )
-            m.AddSignal(
-                h.InputEnded,
+            Creator.AddSignal(
+                UserInputService.InputEnded,
                 function(M)
                     if A == true or M.UserInputType == Enum.UserInputType.Touch then
                         A = false
-                        v.Size = UDim2.fromOffset(G:getValue().X, G:getValue().Y)
+                        windowState.Size = UDim2.fromOffset(G:getValue().X, G:getValue().Y)
                     end
                 end
             )
-            m.AddSignal(
-                v.TabListContainer.UIListLayout:GetPropertyChangedSignal "AbsoluteContentSize",
+            Creator.AddSignal(
+                windowState.TabListContainer.UIListLayout:GetPropertyChangedSignal "AbsoluteContentSize",
                 function()
-                    v.TabHolder.CanvasSize = UDim2.new(0, 0, 0, v.TabListContainer.UIListLayout.AbsoluteContentSize.Y + 10)
+                    windowState.TabHolder.CanvasSize = UDim2.new(0, 0, 0, windowState.TabListContainer.UIListLayout.AbsoluteContentSize.Y + 10)
                 end
             )
-            m.AddSignal(
-                h.InputBegan,
+            Creator.AddSignal(
+                UserInputService.InputBegan,
                 function(M)
                     if
                         type(u.MinimizeKeybind) == "table" and u.MinimizeKeybind.Type == "Keybind" and
-                            not h:GetFocusedTextBox()
+                            not UserInputService:GetFocusedTextBox()
                      then
                         if M.KeyCode.Name == u.MinimizeKeybind.Value then
-                            v:Minimize()
+                            windowState:Minimize()
                         end
-                    elseif M.KeyCode == u.MinimizeKey and not h:GetFocusedTextBox() then
-                        v:Minimize()
+                    elseif M.KeyCode == u.MinimizeKey and not UserInputService:GetFocusedTextBox() then
+                        windowState:Minimize()
                     end
                 end
             )
             function v.Show(M)
-                v.Minimized = false
-                v.Root.Visible = true
+                windowState.Minimized = false
+                windowState.Root.Visible = true
                 pcall(function()
                     local ovs = require(k)._SBOverlays
                     if ovs then for _, ov in ipairs(ovs) do ov.Visible = true end end
                 end)
             end
             function v.Hide(M)
-                v.Minimized = true
-                v.Root.Visible = false
+                windowState.Minimized = true
+                windowState.Root.Visible = false
                 pcall(function()
                     local ovs = require(k)._SBOverlays
                     if ovs then for _, ov in ipairs(ovs) do ov.Visible = false end end
                 end)
             end
             function v.Minimize(M)
-                v.Minimized = not v.Minimized
-                v.Root.Visible = not v.Minimized
+                windowState.Minimized = not windowState.Minimized
+                windowState.Root.Visible = not windowState.Minimized
                 pcall(function()
                     local ovs = require(k)._SBOverlays
-                    if ovs then for _, ov in ipairs(ovs) do ov.Visible = not v.Minimized end end
+                    if ovs then for _, ov in ipairs(ovs) do ov.Visible = not windowState.Minimized end end
                 end)
                 if not C then
                     C = true
@@ -7121,7 +7121,7 @@ local ClosureBindings = {
             end
             function v.Destroy(M)
                 if require(k).UseAcrylic then
-                    v.AcrylicPaint.Model:Destroy()
+                    windowState.AcrylicPaint.Model:Destroy()
                 end
                 pcall(function()
                     local ovs = require(k)._SBOverlays
@@ -7130,9 +7130,9 @@ local ClosureBindings = {
                         table.clear(ovs)
                     end
                 end)
-                v.Root:Destroy()
+                windowState.Root:Destroy()
             end
-            local M = require(p.Dialog):Init(v)
+            local M = require(ScriptParent.Dialog):Init(windowState)
             function v.Dialog(N, O)
                 local P = M:Create()
                 P.Title.Text = O.Title
@@ -7163,17 +7163,17 @@ local ClosureBindings = {
                     extraH = 46
                 end
                 P.Root.Size = UDim2.fromOffset(Q.TextBounds.X + 40, 165 + extraH)
-                if Q.TextBounds.X + 40 > v.Size.X.Offset - 120 then
-                    P.Root.Size = UDim2.fromOffset(v.Size.X.Offset - 120, 165 + extraH)
+                if Q.TextBounds.X + 40 > windowState.Size.X.Offset - 120 then
+                    P.Root.Size = UDim2.fromOffset(windowState.Size.X.Offset - 120, 165 + extraH)
                     Q.TextWrapped = true
-                    P.Root.Size = UDim2.fromOffset(v.Size.X.Offset - 120, Q.TextBounds.Y + 150 + extraH)
+                    P.Root.Size = UDim2.fromOffset(windowState.Size.X.Offset - 120, Q.TextBounds.Y + 150 + extraH)
                 end
                 if O.Input then
                     local inputCfg = (type(O.Input) == "table") and O.Input or {}
                     local box = P:AddInput(inputCfg.Placeholder, inputCfg.Default)
                     P.InputHolder.Position = UDim2.new(0, 20, 1, -(70 + extraH - 8))
                     if inputCfg.Numeric then
-                        m.AddSignal(box:GetPropertyChangedSignal("Text"), function()
+                        Creator.AddSignal(box:GetPropertyChangedSignal("Text"), function()
                             local filtered = box.Text:gsub("[^%d%.%-]", "")
                             if filtered ~= box.Text then box.Text = filtered end
                         end)
@@ -7185,15 +7185,15 @@ local ClosureBindings = {
                 P:Open()
                 return P
             end
-            local N = require(p.Tab):Init(v)
-            v.TabsAPI = N
-            v.SelectorFrame = D
+            local N = require(ScriptParent.Tab):Init(windowState)
+            windowState.TabsAPI = N
+            windowState.SelectorFrame = D
             D.Visible = false
             do
                 local _rs3 = game:GetService("RunService")
                 local _selConn
                 _selConn = _rs3.Heartbeat:Connect(function()
-                    if not v.Root or not v.Root.Parent then
+                    if not windowState.Root or not windowState.Root.Parent then
                         _selConn:Disconnect()
                         return
                     end
@@ -7212,7 +7212,7 @@ local ClosureBindings = {
                 Padding = UDim.new(0, 5),
                 SortOrder = Enum.SortOrder.LayoutOrder,
             })
-            v._headerTabHolder = CreatorNew("Frame", {
+            windowState._headerTabHolder = CreatorNew("Frame", {
                 Name = "_HeaderTabHolder",
                 Size = UDim2.fromOffset(0, 28),
                 Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -7221,22 +7221,22 @@ local ClosureBindings = {
                 ZIndex = 8,
                 Visible = false,
                 ClipsDescendants = false,
-                Parent = v.TitleBar.Frame,
+                Parent = windowState.TitleBar.Frame,
             }, {_htLayout})
             _htLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                v._headerTabHolder.Size = UDim2.fromOffset(_htLayout.AbsoluteContentSize.X, 28)
+                windowState._headerTabHolder.Size = UDim2.fromOffset(_htLayout.AbsoluteContentSize.X, 28)
             end)
-            v._headerSelectorFrame = CreatorNew("Frame", {
+            windowState._headerSelectorFrame = CreatorNew("Frame", {
                 Name = "_HeaderSel",
                 Size = UDim2.fromOffset(24, 2),
                 Position = UDim2.new(0, 0, 1, -4),
                 AnchorPoint = Vector2.new(0.5, 0),
                 BackgroundTransparency = 1,
                 ZIndex = 10,
-                Parent = v.TitleBar.Frame,
+                Parent = windowState.TitleBar.Frame,
             }, {CreatorNew("UICorner", {CornerRadius = UDim.new(1, 0)})})
-            v._headerSelY = 0
-            m.AddThemeObject(v._headerSelectorFrame, {BackgroundColor3 = "Accent"})
+            windowState._headerSelY = 0
+            Creator.AddThemeObject(windowState._headerSelectorFrame, {BackgroundColor3 = "Accent"})
             function v.AddSpaceTabs(O, cfg)
                 cfg = type(cfg) == "table" and cfg or {}
                 N.ListOrderCounter = (N.ListOrderCounter or 0) + 1
@@ -7244,7 +7244,7 @@ local ClosureBindings = {
                     Size = UDim2.new(1, 0, 0, tonumber(cfg.Height) or 8),
                     BackgroundTransparency = 1,
                     LayoutOrder = N.ListOrderCounter,
-                    Parent = v.TabListContainer,
+                    Parent = windowState.TabListContainer,
                 })
             end
             function v.AddDividerTabs(O)
@@ -7253,7 +7253,7 @@ local ClosureBindings = {
                     Size = UDim2.new(1, 0, 0, 12),
                     BackgroundTransparency = 1,
                     LayoutOrder = N.ListOrderCounter,
-                    Parent = v.TabListContainer,
+                    Parent = windowState.TabListContainer,
                 })
                 CreatorNew("Frame", {
                     Size = UDim2.new(1, -20, 0, 2),
@@ -7275,10 +7275,10 @@ local ClosureBindings = {
                     Size = UDim2.new(0, tonumber(cfg.Height) or 8, 1, 0),
                     BackgroundTransparency = 1,
                     LayoutOrder = N.TabCount,
-                    Parent = v._headerTabHolder,
+                    Parent = windowState._headerTabHolder,
                 })
                 task.defer(function()
-                    v._headerTabHolder.Size = UDim2.fromOffset(_htLayout.AbsoluteContentSize.X, 28)
+                    windowState._headerTabHolder.Size = UDim2.fromOffset(_htLayout.AbsoluteContentSize.X, 28)
                 end)
                 return sp
             end
@@ -7289,18 +7289,18 @@ local ClosureBindings = {
                     AnchorPoint = Vector2.new(0, 0.5),
                     BackgroundTransparency = 0.55,
                     LayoutOrder = N.TabCount,
-                    Parent = v._headerTabHolder,
+                    Parent = windowState._headerTabHolder,
                     ThemeTag = { BackgroundColor3 = "Accent" },
                 }, {
                     CreatorNew("UICorner", { CornerRadius = UDim.new(0, 2) })
                 })
                 task.defer(function()
-                    v._headerTabHolder.Size = UDim2.fromOffset(_htLayout.AbsoluteContentSize.X, 28)
+                    windowState._headerTabHolder.Size = UDim2.fromOffset(_htLayout.AbsoluteContentSize.X, 28)
                 end)
                 return div
             end
             function v.AddTab(O, P)
-                local _tab = N:New(P.Title, P.Icon, v.TabListContainer, P.Favoriteable == true)
+                local _tab = N:New(P.Title, P.Icon, windowState.TabListContainer, P.Favoriteable == true)
                 N:ReapplyFavoriteOrder()
                 if N.TabCount == 1 then
                     task.defer(function()
@@ -7313,11 +7313,11 @@ local ClosureBindings = {
                 return _tab
             end
             function v.AddTabsInHeader(O, P)
-                v._headerTabHolder.Visible = true
-                if v._expandTitleBarForTabsSearch then
-                    v._expandTitleBarForTabsSearch()
+                windowState._headerTabHolder.Visible = true
+                if windowState._expandTitleBarForTabsSearch then
+                    windowState._expandTitleBarForTabsSearch()
                 end
-                local _ht = N:NewHeader(P.Title, P.Icon, v.TabListContainer)
+                local _ht = N:NewHeader(P.Title, P.Icon, windowState.TabListContainer)
                 return _ht
             end
             function v.AddTabDivider(O)
@@ -7326,7 +7326,7 @@ local ClosureBindings = {
                     Size = UDim2.new(1, -20, 0, 9),
                     BackgroundTransparency = 1,
                     LayoutOrder = N.ListOrderCounter,
-                    Parent = v.TabListContainer,
+                    Parent = windowState.TabListContainer,
                 }, {
                     CreatorNew("Frame", {
                         Size = UDim2.new(1, 0, 0, 1),
@@ -7342,7 +7342,7 @@ local ClosureBindings = {
                     Size = UDim2.new(1, 0, 0, tonumber(height) or 8),
                     BackgroundTransparency = 1,
                     LayoutOrder = N.ListOrderCounter,
-                    Parent = v.TabListContainer,
+                    Parent = windowState.TabListContainer,
                 })
                 return sp
             end
@@ -7359,7 +7359,7 @@ local ClosureBindings = {
                     Size = UDim2.new(1, -8, 0, 20),
                     BackgroundTransparency = 1,
                     LayoutOrder = N.ListOrderCounter,
-                    Parent = v.TabListContainer,
+                    Parent = windowState.TabListContainer,
                     ThemeTag = {TextColor3 = "SubText"},
                 })
                 return lbl
@@ -7374,29 +7374,29 @@ local ClosureBindings = {
                     end)
                 end
             end
-            m.AddSignal(
-                v.TabHolder:GetPropertyChangedSignal "CanvasPosition",
+            Creator.AddSignal(
+                windowState.TabHolder:GetPropertyChangedSignal "CanvasPosition",
                 function()
                     local pos = N:GetCurrentTabPos()
                     if pos then
                         I = pos + 16
                         J = 0
-                        v.SelectorPosMotor:setGoal(instantNew(pos))
+                        windowState.SelectorPosMotor:setGoal(instantNew(pos))
                     end
                 end
             )
             local windowMeta = {}
             windowMeta.__index = windowMeta
             windowMeta.__namecall = function(self, methodName, ...)
-                local fn = v[methodName]
+                local fn = windowState[methodName]
                 if not fn and type(methodName) == "string" and not methodName:match("^Add") then
-                    fn = v["Add" .. methodName]
+                    fn = windowState["Add" .. methodName]
                 end
                 if fn then return fn(self, ...) end
             end
             function v.SetUserInfo(_, cfg)
                 cfg = cfg or {}
-                local sidebar = v.Root and v.Root:FindFirstChild("SidebarFrame", true)
+                local sidebar = windowState.Root and windowState.Root:FindFirstChild("SidebarFrame", true)
                 local uiTop   = sidebar and sidebar:FindFirstChild("UserInfoTop", true)
                 local uiBot   = sidebar and sidebar:FindFirstChild("UserInfoBottom", true)
                 local target  = uiTop or uiBot
@@ -7420,18 +7420,18 @@ local ClosureBindings = {
             end
 
             function v.SetSearch(_, enabled)
-                local sb = v.Root and v.Root:FindFirstChild("SearchBox", true)
+                local sb = windowState.Root and windowState.Root:FindFirstChild("SearchBox", true)
                 if sb then sb.Visible = enabled ~= false end
             end
 
-            setmetatable(v, windowMeta)
+            setmetatable(windowState, windowMeta)
             return v
         end
     end,
     [18] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(18)
         local h = script.Parent
-        local i, j, k =
+        local i, Creator, k =
             require(h.Themes),
             require(h.Packages.Flipper),
             {
@@ -7497,15 +7497,15 @@ local ClosureBindings = {
             }
         local l = function(l, m)
             if m.ThemeTag then
-                k.AddThemeObject(l, m.ThemeTag)
+                Acrylic.AddThemeObject(l, m.ThemeTag)
             end
         end
         function k.AddSignal(m, n)
-            table.insert(k.Signals, m:Connect(n))
+            table.insert(Acrylic.Signals, m:Connect(n))
         end
         function k.Disconnect()
-            for m = #k.Signals, 1, -1 do
-                local n = table.remove(k.Signals, m)
+            for m = #Acrylic.Signals, 1, -1 do
+                local n = table.remove(Acrylic.Signals, m)
                 n:Disconnect()
             end
         end
@@ -7623,8 +7623,8 @@ local ClosureBindings = {
                     if inst.Parent then
                         pcall(function() conn:Disconnect() end)
                         csPendingConns[pendingKey] = nil
-                        local currentVal = k.GetThemeProperty(
-                            k.Registry[inst] and k.Registry[inst].Properties[prop] or ""
+                        local currentVal = Acrylic.GetThemeProperty(
+                            Acrylic.Registry[inst] and Acrylic.Registry[inst].Properties[prop] or ""
                         )
                         local seqToUse = (typeof(currentVal) == "ColorSequence") and currentVal or colorSeq
                         startCs(inst, prop, seqToUse, opts)
@@ -7635,17 +7635,17 @@ local ClosureBindings = {
         end
 
         function k.UpdateTheme()
-            for m, n in next, k.Registry do
+            for m, n in next, Acrylic.Registry do
                 if m and m.Parent then
                     for o, _ in next, n.Properties do
                         stopCs(m, o)
                     end
                 end
             end
-            for m, n in next, k.Registry do
+            for m, n in next, Acrylic.Registry do
                 if m and m.Parent then
                     for o, p in next, n.Properties do
-                        local val = k.GetThemeProperty(p)
+                        local val = Acrylic.GetThemeProperty(p)
                         if typeof(val) == "ColorSequence" then
                             startCs(m, o, val)
                         elseif val ~= nil then
@@ -7653,14 +7653,14 @@ local ClosureBindings = {
                         end
                     end
                 else
-                    k.Registry[m] = nil
+                    Acrylic.Registry[m] = nil
                 end
             end
-            for o, p in next, k.TransparencyMotors do
-                p:setGoal(j.Instant.new(k.GetThemeProperty "ElementTransparency"))
+            for o, p in next, Acrylic.TransparencyMotors do
+                p:setGoal(Creator.Instant.new(Acrylic.GetThemeProperty "ElementTransparency"))
             end
             local thm = i[require(h).Theme]
-            local x = k.Library
+            local x = Acrylic.Library
             if x and x.Window and x.Window.AcrylicPaint then
                 if Animation and Animation.Apply then Animation.Apply(thm, x.Window.AcrylicPaint.Frame, x.ShineEnabled) end
                 task.defer(function()
@@ -7788,7 +7788,7 @@ local ClosureBindings = {
         end
         local function _applyThemeToObject(inst, props)
             for prop, key in next, props do
-                local val = k.GetThemeProperty(key)
+                local val = Acrylic.GetThemeProperty(key)
                 if typeof(val) == "ColorSequence" then
                     startCs(inst, prop, val)
                 elseif val ~= nil then
@@ -7798,22 +7798,22 @@ local ClosureBindings = {
             end
         end
         function k.AddThemeObject(m, n)
-            k.Registry[m] = {Object = m, Properties = n}
+            Acrylic.Registry[m] = {Object = m, Properties = n}
             _applyThemeToObject(m, n)
             return m
         end
         function k.OverrideTag(m, n)
-            if k.Registry[m] then
-                k.Registry[m].Properties = n
+            if Acrylic.Registry[m] then
+                Acrylic.Registry[m].Properties = n
             else
-                k.Registry[m] = {Object = m, Properties = n}
+                Acrylic.Registry[m] = {Object = m, Properties = n}
             end
             _applyThemeToObject(m, n)
         end
 
         function k.New(m, n, o)
             local p = Instance.new(m)
-            for q, r in next, k.DefaultProperties[m] or {} do
+            for q, r in next, Acrylic.DefaultProperties[m] or {} do
                 p[q] = r
             end
             for s, t in next, n or {} do
@@ -7830,14 +7830,14 @@ local ClosureBindings = {
         function k.SpringMotor(m, n, o, p, s)
             p = p or false
             s = s or false
-            local t = j.SingleMotor.new(m)
+            local t = Creator.SingleMotor.new(m)
             t:onStep(
                 function(u)
                     n[o] = u
                 end
             )
             if s then
-                table.insert(k.TransparencyMotors, t)
+                table.insert(Acrylic.TransparencyMotors, t)
             end
             local u = function(u, v)
                 v = v or false
@@ -7848,7 +7848,7 @@ local ClosureBindings = {
                         end
                     end
                 end
-                t:setGoal(j.Spring.new(u, {frequency = 8}))
+                t:setGoal(Creator.Spring.new(u, {frequency = 8}))
             end
             return t, u
         end
@@ -7868,8 +7868,8 @@ local ClosureBindings = {
     [20] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(20)
         local h = script.Parent.Parent
-        local i = require(h.Creator)
-        local New, Components, l = i.New, h.Components, {}
+        local i = require(UserInputService.Creator)
+        local New, Components, l = Mouse.New, UserInputService.Components, {}
         l.__index = l
         l.__type = "Button"
         function l.New(m, n)
@@ -7897,7 +7897,7 @@ local ClosureBindings = {
                     ThemeTag = {ImageColor3 = "Text"}
                 }
             )
-            i.AddSignal(
+            Mouse.AddSignal(
                 o.Frame.MouseButton1Click,
                 function()
                     m.Library:SafeCallback(n.Callback)
@@ -7909,15 +7909,15 @@ local ClosureBindings = {
     end,
     [21] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(21)
-        local h, i, j, k =
+        local UserInputService, Mouse, Camera, k =
             game:GetService "UserInputService",
             game:GetService "TouchInputService",
             game:GetService "RunService",
             game:GetService "Players"
-        local l, m = j.RenderStepped, k.LocalPlayer
+        local l, m = Camera.RenderStepped, k.LocalPlayer
         local n, o = m:GetMouse(), script.Parent.Parent
         local p = require(o.Creator)
-        local New, Components, elementStates = p.New, o.Components, {}
+        local New, Components, elementStates = Creator.New, o.Components, {}
         elementStates.__index = elementStates
         elementStates.__type = "Colorpicker"
         function elementStates.New(v, w, x)
@@ -8147,7 +8147,7 @@ local ClosureBindings = {
                     })
                     slot1TouchBtn.MouseButton1Click:Connect(function() switchSlot(1) end)
                     slot2TouchBtn.MouseButton1Click:Connect(function() switchSlot(2) end)
-                    p.AddSignal(hexInput.Input.FocusLost, function(entered)
+                    Creator.AddSignal(hexInput.Input.FocusLost, function(entered)
                         if entered then
                             local ok, col = pcall(Color3.fromHex, hexInput.Input.Text)
                             if ok and typeof(col) == "Color3" then
@@ -8156,9 +8156,9 @@ local ClosureBindings = {
                         end
                         applyHSV(true)
                     end)
-                    p.AddSignal(hsvPicker.InputBegan, function(inp)
+                    Creator.AddSignal(hsvPicker.InputBegan, function(inp)
                         if inp.UserInputType ~= Enum.UserInputType.MouseButton1 and inp.UserInputType ~= Enum.UserInputType.Touch then return end
-                        while h:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                        while UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
                             local ap = hsvPicker.AbsolutePosition
                             local as2 = hsvPicker.AbsoluteSize
                             curS2 = math.clamp((n.X - ap.X) / as2.X, 0, 1)
@@ -8167,9 +8167,9 @@ local ClosureBindings = {
                             l:Wait()
                         end
                     end)
-                    p.AddSignal(hueBar.InputBegan, function(inp)
+                    Creator.AddSignal(hueBar.InputBegan, function(inp)
                         if inp.UserInputType ~= Enum.UserInputType.MouseButton1 and inp.UserInputType ~= Enum.UserInputType.Touch then return end
-                        while h:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                        while UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
                             local ap = hueBar.AbsolutePosition
                             local as2 = hueBar.AbsoluteSize
                             curH = math.clamp((n.Y - ap.Y) / as2.Y, 0, 1)
@@ -8513,7 +8513,7 @@ local ClosureBindings = {
                             Z.Input.Text = require(o):Round((1 - G) * 100, 0) .. "%"
                         end
                     end
-                    p.AddSignal(
+                    Creator.AddSignal(
                         V.Input.FocusLost,
                         function(ad)
                             if ad then
@@ -8523,7 +8523,7 @@ local ClosureBindings = {
                             require()
                         end
                     )
-                    p.AddSignal(
+                    Creator.AddSignal(
                         W.Input.FocusLost,
                         function(ad)
                             if ad then
@@ -8534,7 +8534,7 @@ local ClosureBindings = {
                             require()
                         end
                     )
-                                        p.AddSignal(
+                                        Creator.AddSignal(
                         X.Input.FocusLost,
                         function(ad)
                             if ad then
@@ -8545,7 +8545,7 @@ local ClosureBindings = {
                             require()
                         end
                     )
-                    p.AddSignal(
+                    Creator.AddSignal(
                         Y.Input.FocusLost,
                         function(ad)
                             if ad then
@@ -8557,7 +8557,7 @@ local ClosureBindings = {
                         end
                     )
                     if x.Transparency then
-                        p.AddSignal(
+                        Creator.AddSignal(
                             Z.Input.FocusLost,
                             function(ad)
                                 if ad then
@@ -8574,14 +8574,14 @@ local ClosureBindings = {
                             end
                         )
                     end
-                    p.AddSignal(
+                    Creator.AddSignal(
                         L.InputBegan,
                         function(ad)
                             if
                                 ad.UserInputType == Enum.UserInputType.MouseButton1 or
                                     ad.UserInputType == Enum.UserInputType.Touch
                              then
-                                while h:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                                while UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
                                     local ae = L.AbsolutePosition.X
                                     local af = ae + L.AbsoluteSize.X
                                     local ag, ah = math.clamp(n.X, ae, af), L.AbsolutePosition.Y
@@ -8595,14 +8595,14 @@ local ClosureBindings = {
                             end
                         end
                     )
-                    p.AddSignal(
+                    Creator.AddSignal(
                         U.InputBegan,
                         function(ad)
                             if
                                 ad.UserInputType == Enum.UserInputType.MouseButton1 or
                                     ad.UserInputType == Enum.UserInputType.Touch
                              then
-                                while h:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                                while UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
                                     local ae = U.AbsolutePosition.Y
                                     local af = ae + U.AbsoluteSize.Y
                                     local ag = math.clamp(n.Y, ae, af)
@@ -8614,11 +8614,11 @@ local ClosureBindings = {
                         end
                     )
                     if x.Transparency then
-                        p.AddSignal(
+                        Creator.AddSignal(
                             _.InputBegan,
                             function(ad)
                                 if ad.UserInputType == Enum.UserInputType.MouseButton1 then
-                                    while h:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                                    while UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
                                         local ae = _.AbsolutePosition.Y
                                         local af = ae + _.AbsoluteSize.Y
                                         local ag = math.clamp(n.Y, ae, af)
@@ -8631,7 +8631,7 @@ local ClosureBindings = {
                         )
                     end
                     require()
-                    p.AddSignal(oldRevertBtn.MouseButton1Click, function()
+                    Creator.AddSignal(oldRevertBtn.MouseButton1Click, function()
                         D, E, F = Color3.toHSV(currentColor)
                         require()
                     end)
@@ -8675,7 +8675,7 @@ local ClosureBindings = {
                 A:Destroy()
                 y.Options[w] = nil
             end
-            p.AddSignal(
+            Creator.AddSignal(
                 A.Frame.MouseButton1Click,
                 function()
                     ab()
@@ -8696,9 +8696,9 @@ local ClosureBindings = {
             game:GetService "Players".LocalPlayer:GetMouse(),
             game:GetService "Workspace".CurrentCamera,
             script.Parent.Parent
-        local c, d = require(aj.Creator), require(aj.Packages.Flipper)
+        local Creator, d = require(aj.Creator), require(aj.Packages.Flipper)
         local _acrylicMod = require(aj.Acrylic)
-        local New, Components, elementStates = c.New, aj.Components, {}
+        local New, Components, elementStates = Creator.New, aj.Components, {}
         local _RS_dd = game:GetService("RunService")
         local function _clearDropShine(state)
             if state._shineConns then
@@ -8717,7 +8717,7 @@ local ClosureBindings = {
                 if obj:IsA("UIGradient") then
                     local conn
                     conn = _RS_dd.RenderStepped:Connect(function(dt)
-                        local shineCfg = c.GetThemeProperty("Shine")
+                        local shineCfg = Creator.GetThemeProperty("Shine")
                         if not shineCfg then return end
                         local Speed = shineCfg.Speed or 0.5
                         local RotationSpeed = shineCfg.RotationSpeed or 25
@@ -8733,10 +8733,10 @@ local ClosureBindings = {
                 if obj:IsA("UIStroke") then
                     local conn
                     conn = _RS_dd.RenderStepped:Connect(function(dt)
-                        local shineCfg = c.GetThemeProperty("Shine")
+                        local shineCfg = Creator.GetThemeProperty("Shine")
                         local Speed = (shineCfg and shineCfg.Speed) or 0.5
-                        local strokeDark = c.GetThemeProperty("StrokeDark") or c.GetThemeProperty("AcrylicBorder")
-                        local accent = c.GetThemeProperty("Accent")
+                        local strokeDark = Creator.GetThemeProperty("StrokeDark") or Creator.GetThemeProperty("AcrylicBorder")
+                        local accent = Creator.GetThemeProperty("Accent")
                         local t = (obj:GetAttribute("Shine") or 0) + dt * Speed
                         obj:SetAttribute("Shine", t)
                         if strokeDark and accent then
@@ -8815,7 +8815,7 @@ local ClosureBindings = {
                         ThemeTag = {ImageColor3 = "SubText"}
                     }
                 )
-            local p, s =
+            local Creator, s =
                 New(
                     "TextButton",
                     {
@@ -8845,7 +8845,7 @@ local ClosureBindings = {
             local function _fitDropdownWidth()
                 local avail = m.Frame.AbsoluteSize.X - 20
                 local w = math.clamp(avail * 0.5, 80, 160)
-                p.Size = UDim2.fromOffset(w, 30)
+                Creator.Size = UDim2.fromOffset(w, 30)
             end
             _fitDropdownWidth()
             m.Frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(_fitDropdownWidth)
@@ -8945,7 +8945,7 @@ local ClosureBindings = {
                     _ddBgChild = New("ImageLabel",{BackgroundTransparency=1,Image="http://www.roblox.com/asset/?id=5554236805",ScaleType=Enum.ScaleType.Slice,SliceCenter=Rect.new(23,23,277,277),Size=UDim2.fromScale(1,1)+UDim2.fromOffset(30,30),Position=UDim2.fromOffset(-15,-15),ImageColor3=Color3.fromRGB(0,0,0),ImageTransparency=0.1,Visible=false})
                 end
             end
-            local _ddBorderThickness = tonumber(c.GetThemeProperty("DropdownBorderThickness")) or 1
+            local _ddBorderThickness = tonumber(Creator.GetThemeProperty("DropdownBorderThickness")) or 1
             local ddStroke = New("UIStroke", {ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Thickness = _ddBorderThickness, ThemeTag = {Color = "DropdownBorder"}})
             local ddGradient = New("Frame", {
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -8968,7 +8968,7 @@ local ClosureBindings = {
             local _isManagerDD = j.IsManagerDropdown == true or j.ThemedDropdown == true
             if _isManagerDD then
                 local function _syncManagerTransparency()
-                    local baseTransp = c.GetThemeProperty("DropdownTransparency") or 0
+                    local baseTransp = Creator.GetThemeProperty("DropdownTransparency") or 0
                     u.BackgroundTransparency = h.Library.WindowTransparent and math.max(baseTransp, 0.35) or baseTransp
                 end
                 _syncManagerTransparency()
@@ -8977,13 +8977,13 @@ local ClosureBindings = {
             end
             local _isOutsideDD = (j.OutsideWindow or j.DropdownOutsideWindow) == true
             local _isManagerDDAnim = j.IsManagerDropdown == true or j.ThemedDropdown == true
-            local _themeSupportsShineInit = c.GetThemeProperty("ShineEnabled") == true
+            local _themeSupportsShineInit = Creator.GetThemeProperty("ShineEnabled") == true
             local _initialAnimated = _themeSupportsShineInit and (
                 (_isManagerDDAnim and (h.Library.ShineEnabled == true)) or (j.Animated == true)
             )
             if _initialAnimated then
                 ddGradient.Visible = true
-                local acrylicBorder = c.GetThemeProperty("AcrylicBorder")
+                local acrylicBorder = Creator.GetThemeProperty("AcrylicBorder")
                 if acrylicBorder then ddStroke.Color = acrylicBorder end
             end
             local _ddAcrylicPaint = nil
@@ -9028,8 +9028,8 @@ local ClosureBindings = {
                         local winFrame = _winFrame()
                         local winLeft   = winFrame and winFrame.AbsolutePosition.X or 0
                         local winTop    = winFrame and winFrame.AbsolutePosition.Y or 0
-                        local winRight  = winFrame and (winFrame.AbsolutePosition.X + winFrame.AbsoluteSize.X) or (p.AbsolutePosition.X + p.AbsoluteSize.X + 8)
-                        local winBottom = winFrame and (winFrame.AbsolutePosition.Y + winFrame.AbsoluteSize.Y) or (p.AbsolutePosition.Y + p.AbsoluteSize.Y + 8)
+                        local winRight  = winFrame and (winFrame.AbsolutePosition.X + winFrame.AbsoluteSize.X) or (Creator.AbsolutePosition.X + Creator.AbsoluteSize.X + 8)
+                        local winBottom = winFrame and (winFrame.AbsolutePosition.Y + winFrame.AbsoluteSize.Y) or (Creator.AbsolutePosition.Y + Creator.AbsoluteSize.Y + 8)
                         local winCenterX = winFrame and (winLeft + winFrame.AbsoluteSize.X / 2) or winLeft
                         local popW     = v.AbsoluteSize.X
                         local popH     = v.AbsoluteSize.Y
@@ -9066,7 +9066,7 @@ local ClosureBindings = {
                             popX = leftFits and (winLeft - 8 - popW) or math.min(winLeft - 8 - popW, ai.ViewportSize.X - popW - 8)
                             popX = math.min(popX, winLeft - popW - 2)
                             if #l.Values > 10 then popY = winTop else
-                                popY = math.max(8, math.min(p.AbsolutePosition.Y + p.AbsoluteSize.Y / 2 - popH / 2, ai.ViewportSize.Y - popH - 8))
+                                popY = math.max(8, math.min(Creator.AbsolutePosition.Y + Creator.AbsoluteSize.Y / 2 - popH / 2, ai.ViewportSize.Y - popH - 8))
                             end
                         elseif side == "top" then
                             popY = topFits and (winTop - 8 - popH) or math.min(winTop - 8 - popH, 8)
@@ -9078,7 +9078,7 @@ local ClosureBindings = {
                         else
                             popX = rightFits and (winRight + 8) or math.max(winRight + 2, ai.ViewportSize.X - popW - 8)
                             if #l.Values > 10 then popY = winTop else
-                                popY = math.max(8, math.min(p.AbsolutePosition.Y + p.AbsoluteSize.Y / 2 - popH / 2, ai.ViewportSize.Y - popH - 8))
+                                popY = math.max(8, math.min(Creator.AbsolutePosition.Y + Creator.AbsoluteSize.Y / 2 - popH / 2, ai.ViewportSize.Y - popH - 8))
                             end
                         end
                         if winFrame then
@@ -9094,10 +9094,10 @@ local ClosureBindings = {
                         end
                         v.Position = UDim2.fromOffset(popX, popY)
                     else
-                        local popX = p.AbsolutePosition.X
-                        local popY = p.AbsolutePosition.Y + p.AbsoluteSize.Y + 4
+                        local popX = Creator.AbsolutePosition.X
+                        local popY = Creator.AbsolutePosition.Y + Creator.AbsoluteSize.Y + 4
                         if popY + v.AbsoluteSize.Y > ai.ViewportSize.Y - 8 then
-                            popY = p.AbsolutePosition.Y - v.AbsoluteSize.Y - 4
+                            popY = Creator.AbsolutePosition.Y - v.AbsoluteSize.Y - 4
                         end
                         popY = math.max(8, popY)
                         v.Position = UDim2.fromOffset(popX, popY)
@@ -9130,15 +9130,15 @@ local ClosureBindings = {
                 end
             y()
             w()
-            c.AddSignal(p:GetPropertyChangedSignal "AbsolutePosition", w)
-            c.AddSignal(p:GetPropertyChangedSignal "AbsoluteSize", function() y() w() end)
-            c.AddSignal(
-                p.MouseButton1Click,
+            Creator.AddSignal(Creator:GetPropertyChangedSignal "AbsolutePosition", w)
+            Creator.AddSignal(Creator:GetPropertyChangedSignal "AbsoluteSize", function() y() w() end)
+            Creator.AddSignal(
+                Creator.MouseButton1Click,
                 function()
                     l:Open()
                 end
             )
-            c.AddSignal(
+            Creator.AddSignal(
                 ag.InputBegan,
                 function(A)
                     if not l.Opened then return end
@@ -9161,7 +9161,7 @@ local ClosureBindings = {
             )
             local A = h.ScrollFrame
             l._refreshShine = function()
-                local themeSupportsShine = c.GetThemeProperty("ShineEnabled") == true
+                local themeSupportsShine = Creator.GetThemeProperty("ShineEnabled") == true
                 local shouldAnimate
                 if j.IsManagerDropdown or j.ThemedDropdown then
                     shouldAnimate = themeSupportsShine and h.Library.ShineEnabled == true
@@ -9170,10 +9170,10 @@ local ClosureBindings = {
                 end
                 ddGradient.Visible = shouldAnimate
                 if shouldAnimate then
-                    local acrylicBorder = c.GetThemeProperty("AcrylicBorder")
+                    local acrylicBorder = Creator.GetThemeProperty("AcrylicBorder")
                     if acrylicBorder then ddStroke.Color = acrylicBorder end
                 else
-                    local dropBorder = c.GetThemeProperty("DropdownBorder")
+                    local dropBorder = Creator.GetThemeProperty("DropdownBorder")
                     if dropBorder then ddStroke.Color = dropBorder end
                 end
                 _applyDropShine(l, u, shouldAnimate)
@@ -9375,33 +9375,33 @@ local ClosureBindings = {
                     else
                         N = l.Value == I
                     end
-                    local O, P = c.SpringMotor(1, M, "BackgroundTransparency")
-                    local Q, R = c.SpringMotor(1, K, "BackgroundTransparency")
+                    local O, P = Creator.SpringMotor(1, M, "BackgroundTransparency")
+                    local Q, R = Creator.SpringMotor(1, K, "BackgroundTransparency")
                     local S = d.SingleMotor.new(6)
                     S:onStep(
                         function(T)
                             K.Size = UDim2.new(0, 4, 0, T)
                         end
                     )
-                    c.AddSignal(
+                    Creator.AddSignal(
                         M.MouseEnter,
                         function()
                             P(N and 0.85 or 0.89)
                         end
                     )
-                    c.AddSignal(
+                    Creator.AddSignal(
                         M.MouseLeave,
                         function()
                             P(N and 0.89 or 1)
                         end
                     )
-                    c.AddSignal(
+                    Creator.AddSignal(
                         M.MouseButton1Down,
                         function()
                             P(0.92)
                         end
                     )
-                    c.AddSignal(
+                    Creator.AddSignal(
                         M.MouseButton1Up,
                         function()
                             P(N and 0.85 or 0.89)
@@ -9465,7 +9465,7 @@ local ClosureBindings = {
                     x = x + 30
                 end
                 if x < 60 then
-                    x = p.AbsoluteSize.X > 0 and p.AbsoluteSize.X or 170
+                    x = Creator.AbsoluteSize.X > 0 and Creator.AbsoluteSize.X or 170
                 end
                 z()
                 task.defer(function()
@@ -9562,11 +9562,11 @@ local ClosureBindings = {
         local maui, script, require, getfenv, setfenv = ImportGlobals(23)
         local af = script.Parent.Parent
         local ag = require(af.Creator)
-        local New, creatorAddSignal, Components, c = ag.New, ag.AddSignal, af.Components, {}
-        c.__index = c
-        c.__type = "Input"
+        local New, creatorAddSignal, Components, c = Creator.New, Creator.AddSignal, af.Components, {}
+        Creator.__index = c
+        Creator.__type = "Input"
         function c.New(d, e, f)
-            local g = c.Library
+            local g = Creator.Library
             assert(f.Title, "Input - Missing Title")
             f.Callback = f.Callback or function()
                 end
@@ -9579,7 +9579,7 @@ local ClosureBindings = {
                         end,
                     Type = "Input"
                 },
-                require(Components.Element)(f.Title, f.Description, c.Container, false)
+                require(Components.Element)(f.Title, f.Description, Creator.Container, false)
             h.SetTitle = i.SetTitle
             h.SetDesc = i.SetDesc
             h.Frame = i.Frame
@@ -9646,12 +9646,12 @@ local ClosureBindings = {
     [24] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(24)
         local af, ag = game:GetService "UserInputService", script.Parent.Parent
-        local ah = require(ag.Creator)
-        local New, Components, c = ah.New, ag.Components, {}
-        c.__index = c
-        c.__type = "Keybind"
+        local ah = require(Creator.Creator)
+        local New, Components, c = ah.New, Creator.Components, {}
+        Creator.__index = c
+        Creator.__type = "Keybind"
         function c.New(d, e, f)
-            local g = c.Library
+            local g = Creator.Library
             assert(f.Title, "KeyBind - Missing Title")
             assert(f.Default, "KeyBind - Missing default value.")
             local h, i, j =
@@ -9666,7 +9666,7 @@ local ClosureBindings = {
                         end
                 },
                 false,
-                require(Components.Element)(f.Title, f.Description, c.Container, true)
+                require(Components.Element)(f.Title, f.Description, Creator.Container, true)
             h.SetTitle = j.SetTitle
             h.SetDesc = j.SetDesc
             h.Frame = j.Frame
@@ -9880,14 +9880,14 @@ local ClosureBindings = {
     [25] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(25)
         local af = script.Parent.Parent
-        local ag, ah, ai, aj = af.Components, require(af.Packages.Flipper), require(af.Creator), {}
+        local Creator, ah, ai, aj = af.Components, require(af.Packages.Flipper), require(af.Creator), {}
         aj.__index = aj
         aj.__type = "Paragraph"
         function aj.New(c, d)
             d = d or {}
             script.Title = script.Title or ""
             script.Content = script.Content or ""
-            local e = require(ag.Element)(script.Title, script.Content, aj.Container, false)
+            local e = require(Creator.Element)(script.Title, script.Content, aj.Container, false)
             e.Frame.BackgroundTransparency = 0.92
             e.Border.Transparency = 0.6
             return e
@@ -9897,10 +9897,10 @@ local ClosureBindings = {
     [26] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(26)
         local af, ag = game:GetService "UserInputService", script.Parent.Parent
-        local ah = require(ag.Creator)
-        local New, Components, c = ah.New, ag.Components, {}
-        c.__index = c
-        c.__type = "Slider"
+        local ah = require(Creator.Creator)
+        local New, Components, c = ah.New, Creator.Components, {}
+        Creator.__index = c
+        Creator.__type = "Slider"
 
         local function applySliderIcon(imgLabel, iconKey, lib)
             if not iconKey or not lib or not lib.GetIcon then return end
@@ -9916,7 +9916,7 @@ local ClosureBindings = {
         end
 
         function c.New(d, e, f)
-            local g = c.Library
+            local g = Creator.Library
             assert(f.Title, "Slider - Missing Title.")
             assert(f.Default ~= nil, "Slider - Missing default value.")
             assert(f.Min ~= nil, "Slider - Missing minimum value.")
@@ -9941,7 +9941,7 @@ local ClosureBindings = {
                     Type = "Slider"
                 },
                 false,
-                require(Components.Element)(f.Title, f.Description, c.Container, false)
+                require(Components.Element)(f.Title, f.Description, Creator.Container, false)
             j.DescLabel.Size = UDim2.new(1, -170, 0, 14)
             h.SetTitle = j.SetTitle
             h.SetDesc = j.SetDesc
@@ -10190,7 +10190,7 @@ local ClosureBindings = {
             ah.AddSignal(
                 k.InputBegan,
                 function(p)
-                    if p.UserInputType == Enum.UserInputType.MouseButton1 or p.UserInputType == Enum.UserInputType.Touch then
+                    if Creator.UserInputType == Enum.UserInputType.MouseButton1 or Creator.UserInputType == Enum.UserInputType.Touch then
                         i = true
                     end
                 end
@@ -10198,7 +10198,7 @@ local ClosureBindings = {
             ah.AddSignal(
                 k.InputEnded,
                 function(p)
-                    if p.UserInputType == Enum.UserInputType.MouseButton1 or p.UserInputType == Enum.UserInputType.Touch then
+                    if Creator.UserInputType == Enum.UserInputType.MouseButton1 or Creator.UserInputType == Enum.UserInputType.Touch then
                         i = false
                     end
                 end
@@ -10208,10 +10208,10 @@ local ClosureBindings = {
                 function(p)
                     if
                         i and
-                            (p.UserInputType == Enum.UserInputType.MouseMovement or
-                                p.UserInputType == Enum.UserInputType.Touch)
+                            (Creator.UserInputType == Enum.UserInputType.MouseMovement or
+                                Creator.UserInputType == Enum.UserInputType.Touch)
                      then
-                        local s = math.clamp((p.Position.X - trackFrame.AbsolutePosition.X) / trackFrame.AbsoluteSize.X, 0, 1)
+                        local s = math.clamp((Creator.Position.X - trackFrame.AbsolutePosition.X) / trackFrame.AbsoluteSize.X, 0, 1)
                         h:SetValue(h.Min + ((h.Max - h.Min) * s))
                     end
                 end
@@ -10221,16 +10221,16 @@ local ClosureBindings = {
                 s(h.Value)
             end
             function h.SetValue(p, s)
-                p.Value = g:Round(math.clamp(s, h.Min, h.Max), h.Rounding)
-                k.Position = UDim2.new((p.Value - h.Min) / (h.Max - h.Min), -10, 0.5, 0)
-                fillFrame.Size = UDim2.fromScale((p.Value - h.Min) / (h.Max - h.Min), 1)
-                valueLabel.Text = tostring(p.Value)
-                g:SafeCallback(h.Callback, p.Value)
-                g:SafeCallback(h.Changed, p.Value)
+                Creator.Value = g:Round(math.clamp(s, h.Min, h.Max), h.Rounding)
+                k.Position = UDim2.new((Creator.Value - h.Min) / (h.Max - h.Min), -10, 0.5, 0)
+                fillFrame.Size = UDim2.fromScale((Creator.Value - h.Min) / (h.Max - h.Min), 1)
+                valueLabel.Text = tostring(Creator.Value)
+                g:SafeCallback(h.Callback, Creator.Value)
+                g:SafeCallback(h.Changed, Creator.Value)
                 if stackedValLabel then
-                    stackedValLabel.Text = tostring(p.Value)
+                    stackedValLabel.Text = tostring(Creator.Value)
                 end
-                local pct = (h.Max ~= h.Min) and ((p.Value - h.Min) / (h.Max - h.Min)) or 0
+                local pct = (h.Max ~= h.Min) and ((Creator.Value - h.Min) / (h.Max - h.Min)) or 0
                 if stackedKnob then
                     stackedKnob.Position = UDim2.new(pct, 0, 0.5, 0)
                 end
@@ -10251,12 +10251,12 @@ local ClosureBindings = {
     [27] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(27)
         local af, ag = game:GetService "TweenService", script.Parent.Parent
-        local ah = require(ag.Creator)
-        local New, Components, c = ah.New, ag.Components, {}
-        c.__index = c
-        c.__type = "Toggle"
+        local ah = require(Creator.Creator)
+        local New, Components, c = ah.New, Creator.Components, {}
+        Creator.__index = c
+        Creator.__type = "Toggle"
         function c.New(d, e, f)
-            local g = c.Library
+            local g = Creator.Library
             assert(f.Title, "Toggle - Missing Title")
             local h, i =
                 {
@@ -10265,7 +10265,7 @@ local ClosureBindings = {
                         end,
                     Type = "Toggle"
                 },
-                require(Components.Element)(f.Title, f.Description, c.Container, true)
+                require(Components.Element)(f.Title, f.Description, Creator.Container, true)
             i.DescLabel.Size = UDim2.new(1, -54, 0, 14)
             h.SetTitle = i.SetTitle
             h.SetDesc = i.SetDesc
