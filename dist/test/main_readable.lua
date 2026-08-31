@@ -3216,7 +3216,7 @@ local ClosureBindings = {
     end,
     function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(3)
-        local Creator, createAcrylic, screenToWorld, getDepth = require(script.Parent.Parent.Creator), require(script.Parent.CreateAcrylic), unpack(require(script.Parent.Utils))
+        local Creator, createAcrylic, screenToWorld, getDepth = require(resolveModule("Creator")), require(resolveModule("CreateAcrylic")), unpack(require(resolveModule("Utils")))
         local l = function(l)
             local m = {}
             l = l or 0.001
@@ -3317,10 +3317,8 @@ local ClosureBindings = {
     end,
     function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(4)
-        local _parent   = script and script.Parent
-        local _root     = _parent and _parent.Parent
-        local Creator   = _root   and require(_root:FindFirstChild("Creator"))
-        local AcrylicBlur = _parent and require(_parent:FindFirstChild("AcrylicBlur"))
+        local Creator   = require(resolveModule("Creator"))
+        local AcrylicBlur = require(resolveModule("AcrylicBlur"))
         local j = Creator.New
         return function(k)
             local l = {}
@@ -3422,7 +3420,7 @@ local ClosureBindings = {
                 }
             )
             local m
-            if require(script.Parent.Parent).UseAcrylic and not (k and k.NoBlur) then
+            if require(resolveModule("MainModule")).UseAcrylic and not (k and k.NoBlur) then
                 m = AcrylicBlur()
                 m.Frame.Parent = l.Frame
                 l.Model = m.Model
@@ -4151,7 +4149,7 @@ local ClosureBindings = {
                     New(
                         "ImageLabel",
                         {
-                            Image = require(script.Parent.Assets).Close,
+                            Image = require(resolveModule("Assets")).Close,
                             Size = UDim2.fromOffset(16, 16),
                             Position = UDim2.fromScale(0.5, 0.5),
                             AnchorPoint = Vector2.new(0.5, 0.5),
@@ -5778,8 +5776,8 @@ local ClosureBindings = {
     end,
     [16] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(16)
-        local Flipper, i = script.Parent.Parent, require(script.Parent.Assets)
-        local Acrylic, k = require(Flipper.Creator), require(Flipper.Packages.Flipper)
+        local ModuleRoot, Assets = scriptMap[1], require(resolveModule("Assets"))
+        local Acrylic, Flipper = require(resolveModule("Creator")), require(resolveModule("Flipper"))
         local New, m = Acrylic.New, Acrylic.AddSignal
         return function(n)
             local o, p, q =
@@ -6224,7 +6222,7 @@ local ClosureBindings = {
             game:GetService "Players".LocalPlayer:GetMouse(),
             game:GetService "Workspace".CurrentCamera,
             script.Parent.Parent
-        local l, Creator, Acrylic, Assets, p = require(k.Packages.Flipper), require(k.Creator), require(k.Acrylic), require(script.Parent.Assets), script.Parent
+        local l, Creator, Acrylic, Assets, p = require(k.Packages.Flipper), require(k.Creator), require(k.Acrylic), require(resolveModule("Assets")), script.Parent
         local springNew, instantNew, CreatorNew = l.Spring.new, l.Instant.new, Creator.New
         return function(t)
             local u, windowState, w, x, y, z =
@@ -6900,7 +6898,7 @@ local ClosureBindings = {
                 {BackgroundTransparency = 1, Size = windowState.Size, Position = windowState.Position, Parent = t.Parent},
                 {windowState.AcrylicPaint.Frame, windowState.ContainerHolder, F, E}
             )
-            windowState.TitleBar = require(script.Parent.TitleBar) {Title = t.Title, SubTitle = t.SubTitle, Parent = windowState.Root, Window = windowState, Icon = t.TitleIcon, Version = t.Version, Tags = t.Tags}
+            windowState.TitleBar = require(resolveModule("TitleBar")) {Title = t.Title, SubTitle = t.SubTitle, Parent = windowState.Root, Window = windowState, Icon = t.TitleIcon, Version = t.Version, Tags = t.Tags}
             local _tbExpandedForTabs = false
             local function _expandTitleBarForTabsSearch()
                 if _tbExpandedForTabs then return end
@@ -11236,7 +11234,7 @@ local ClosureBindings = {
     end,
     [31] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(31)
-        local af, ag, ah, ai = game:GetService "RunService", require(script.Parent.Signal), function()
+        local af, ag, ah, ai = game:GetService "RunService", require(resolveModule("Signal")), function()
             end, {}
         ai.__index = ai
         function ai.new()
@@ -11279,7 +11277,7 @@ local ClosureBindings = {
     [32] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(32)
         return function()
-            local af, ag = game:GetService "RunService", require(script.Parent.BaseMotor)
+            local af, ag = game:GetService "RunService", require(resolveModule("BaseMotor"))
             describe(
                 "connection management",
                 function()
@@ -11319,7 +11317,7 @@ local ClosureBindings = {
     end,
     [33] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(33)
-        local af, ag, ah = require(script.Parent.BaseMotor), require(script.Parent.SingleMotor), require(script.Parent.isMotor)
+        local af, ag, ah = require(resolveModule("BaseMotor")), require(resolveModule("SingleMotor")), require(resolveModule("isMotor"))
         local ai = setmetatable({}, af)
         ai.__index = ai
         local aj = function(aj)
@@ -11405,7 +11403,7 @@ local ClosureBindings = {
     [34] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(34)
         return function()
-            local af, ag, ah = require(script.Parent.GroupMotor), require(script.Parent.Instant), require(script.Parent.Spring)
+            local af, ag, ah = require(resolveModule("GroupMotor")), require(resolveModule("Instant")), require(resolveModule("Spring"))
             it(
                 "should complete when all child motors are complete",
                 function()
@@ -11486,7 +11484,7 @@ local ClosureBindings = {
     [36] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(36)
         return function()
-            local af = require(script.Parent.Instant)
+            local af = require(resolveModule("Instant"))
             it(
                 "should return a completed state with the provided value",
                 function()
@@ -11523,7 +11521,7 @@ local ClosureBindings = {
     [38] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(38)
         return function()
-            local af, ag = require(script.Parent.SingleMotor), require(script.Parent.Linear)
+            local af, ag = require(resolveModule("SingleMotor")), require(resolveModule("Linear"))
             describe(
                 "completed state",
                 function()
@@ -11632,7 +11630,7 @@ local ClosureBindings = {
     [40] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(40)
         return function()
-            local af = require(script.Parent.Signal)
+            local af = require(resolveModule("Signal"))
             it(
                 "should invoke all connections, instantly",
                 function()
@@ -11685,7 +11683,7 @@ local ClosureBindings = {
     end,
     [41] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(41)
-        local af = require(script.Parent.BaseMotor)
+        local af = require(resolveModule("BaseMotor"))
         local ag = setmetatable({}, af)
         ag.__index = ag
         function ag.new(ah, aj)
@@ -11735,7 +11733,7 @@ local ClosureBindings = {
     [42] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(42)
         return function()
-            local af, ag = require(script.Parent.SingleMotor), require(script.Parent.Instant)
+            local af, ag = require(resolveModule("SingleMotor")), require(resolveModule("Instant"))
             it(
                 "should assign new state on step",
                 function()
@@ -11830,7 +11828,7 @@ local ClosureBindings = {
     [44] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(44)
         return function()
-            local af, ag = require(script.Parent.SingleMotor), require(script.Parent.Spring)
+            local af, ag = require(resolveModule("SingleMotor")), require(resolveModule("Spring"))
             describe(
                 "completed state",
                 function()
@@ -11881,7 +11879,7 @@ local ClosureBindings = {
     [46] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(46)
         return function()
-            local af, ag, ah = require(script.Parent.isMotor), require(script.Parent.SingleMotor), require(script.Parent.GroupMotor)
+            local af, ag, ah = require(resolveModule("isMotor")), require(resolveModule("SingleMotor")), require(resolveModule("GroupMotor"))
             local aj, c = ag.new(0), ah.new {}
             it(
                 "should properly detect motors",
@@ -13621,14 +13619,23 @@ do
         end
     end
 
+    local function resolveModule(name)
+        for id, inst in next, scriptMap do
+            if type(id) == 'number' then
+                local ok, n = pcall(function() return inst.Name end)
+                if ok and n == name then return inst end
+            end
+        end
+    end
+
     function ImportGlobals(moduleId)
         local instance = scriptMap[moduleId]
         if not instance then
-            error("[FluentPro] ImportGlobals: scriptMap[" .. tostring(moduleId) .. "] is nil. scriptMap has " .. tostring(#scriptMap) .. " entries.", 2)
+            error("[FluentPro] ImportGlobals: scriptMap[" .. tostring(moduleId) .. "] is nil.", 2)
         end
         local fn = closureMap[instance]
         if not fn then
-            error("[FluentPro] ImportGlobals: closureMap for module " .. tostring(moduleId) .. " (" .. tostring(instance.Name) .. ") is nil.", 2)
+            error("[FluentPro] ImportGlobals: closureMap for module " .. tostring(moduleId) .. " is nil.", 2)
         end
 
         local initialized = false
