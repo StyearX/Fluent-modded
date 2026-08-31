@@ -1856,7 +1856,7 @@ local ClosureBindings = {
             local _hasUserInfoCfg = (D.UserInfo ~= nil)
             local _effUserInfoBottom = _hasUserInfoCfg and (_effUserInfoTop ~= true)
             local E =
-                require(s.Window) {
+                require(Components.Window) {
                     Parent = w, Size = D.Size, Title = D.Title, SubTitle = D.SubTitle, TabWidth = D.TabWidth,
                     UserInfo = _effUserInfoBottom, UserInfoTop = _effUserInfoTop,
                     UserInfoTitle = _effUserInfoTitle, UserInfoSubtitle = _effUserInfoSubtitle,
@@ -2991,7 +2991,7 @@ local ClosureBindings = {
                         mDragInput = inp
                     end
                 end)
-                k.InputChanged:Connect(function(inp)
+                UserInputService.InputChanged:Connect(function(inp)
                     if inp == mDragInput and mDragging then doUpdate(inp) end
                 end)
             end
