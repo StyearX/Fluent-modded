@@ -3317,7 +3317,10 @@ local ClosureBindings = {
     end,
     function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(4)
-        local Creator, AcrylicBlur = require(script.Parent.Parent.Creator), require(script.Parent.AcrylicBlur)
+        local _parent   = script and script.Parent
+        local _root     = _parent and _parent.Parent
+        local Creator   = _root   and require(_root:FindFirstChild("Creator"))
+        local AcrylicBlur = _parent and require(_parent:FindFirstChild("AcrylicBlur"))
         local j = Creator.New
         return function(k)
             local l = {}
@@ -13525,7 +13528,7 @@ do
     end
 
     local function createVirtualInstance(className, instanceName, parent)
-        local children    = setmetatable({}, {__mode = 'k'})
+        local children    = {}
         local instanceId  = newproxy(true)
         local stringValue
         local customProps = {}
@@ -13640,8 +13643,11 @@ do
         local virtualScript = instance
 
         local function moduleRequire(target, ...)
-            if childrenMap[target] and target.ClassName == 'ModuleScript' and closureMap[target] then
+            if target ~= nil and childrenMap[target] and target.ClassName == 'ModuleScript' and closureMap[target] then
                 return executeModule(target)
+            end
+            if target ~= nil and not childrenMap[target] then
+                return requireLib(target, ...)
             end
             return requireLib(target, ...)
         end
