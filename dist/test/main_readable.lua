@@ -1,4 +1,6 @@
 local ImportGlobals
+local scriptMap = {}
+local resolveModule
 local ModuleTree = {
     {
         1,
@@ -3175,7 +3177,7 @@ local ClosureBindings = {
     end,
     function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(2)
-        local Acrylic = {AcrylicBlur = require(script.AcrylicBlur), CreateAcrylic = require(script.CreateAcrylic), AcrylicPaint = require(script.AcrylicPaint)}
+        local Acrylic = {AcrylicBlur = require(resolveModule("AcrylicBlur")), CreateAcrylic = require(resolveModule("CreateAcrylic")), AcrylicPaint = require(resolveModule("AcrylicPaint"))}
         function Acrylic.init()
             local i = Instance.new "DepthOfFieldEffect"
             i.FarIntensity = 0
@@ -3433,7 +3435,7 @@ local ClosureBindings = {
     function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(5)
         local h = script.Parent.Parent
-        local i = require(h.Creator)
+        local i = require(resolveModule("Creator"))
         local j = function()
             local j =
                 Creator.New(
@@ -3482,7 +3484,7 @@ local ClosureBindings = {
     [9] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(9)
         local h = script.Parent.Parent
-        local Flipper, j = require(h.Packages.Flipper), require(h.Creator)
+        local Flipper, j = require(resolveModule("Flipper")), require(resolveModule("Creator"))
         local New, l = Creator.New, Flipper.Spring.new
         return function(m, n, o)
             o = o or false
@@ -3563,7 +3565,7 @@ local ClosureBindings = {
             game:GetService "Players".LocalPlayer:GetMouse(),
             game:GetService "Workspace".CurrentCamera,
             script.Parent.Parent
-        local Flipper, m = require(k.Packages.Flipper), require(k.Creator)
+        local Flipper, m = require(resolveModule("Flipper")), require(resolveModule("Creator"))
         local n, o, p, q = Flipper.Spring.new, Flipper.Instant.new, Creator.New, {Window = nil}
         function q.Init(r, s)
             q.Window = s
@@ -3681,7 +3683,7 @@ local ClosureBindings = {
                 A = A or "Button"
                 B = B or function()
                     end
-                local C = require(k.Components.Button)("", s.ButtonHolder, true)
+                local C = require(resolveModule("Button"))("", s.ButtonHolder, true)
                 C.Title.Text = A
                 for D, E in next, s.ButtonHolder:GetChildren() do
                     if E:IsA "TextButton" then
@@ -3989,7 +3991,7 @@ local ClosureBindings = {
     [12] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(12)
         local h = script.Parent.Parent
-        local i, Creator, k = require(h.Packages.Flipper), require(h.Creator), require(h.Acrylic)
+        local i, Creator, k = require(resolveModule("Flipper")), require(resolveModule("Creator")), require(resolveModule("Acrylic"))
         local springNew, instantNew, New, o = i.Spring.new, i.Instant.new, Creator.New, {}
         function o.Init(p, q)
             New._screenGui = q
@@ -4223,7 +4225,7 @@ local ClosureBindings = {
             if Animation and Animation.Apply then
                 pcall(function()
                     local Lib = require(h)
-                    local thm = require(h.Themes)[Lib.Theme]
+                    local thm = require(resolveModule("Themes"))[Lib.Theme]
                     Animation.Apply(thm, r.AcrylicPaint.Frame, Lib.ShineEnabled)
                 end)
             end
@@ -4889,7 +4891,7 @@ local ClosureBindings = {
                 x._elementCount = (x._elementCount or 0) + 1
                 local _order = x._elementCount
                 local favKey = tostring(x.Name) .. "_Section_" .. tostring(A)
-                local B, C = {Type = "Section"}, require(n.Section)(A, iconKey, x.Container, favoriteable == true, favKey)
+                local B, C = {Type = "Section"}, require(resolveModule("Section"))(A, iconKey, x.Container, favoriteable == true, favKey)
                 B.Container = C.Container
                 B.ScrollFrame = x.Container
                 C.Root.LayoutOrder = _order
@@ -5438,7 +5440,7 @@ local ClosureBindings = {
             function ht.AddSection(self2, title2, iconKey2, favoriteable2)
                 ht._elementCount = ht._elementCount + 1
                 local _order = ht._elementCount
-                local built = require(n.Section)(title2, iconKey2, ht.ContainerFrame, favoriteable2, tostring(ht.Name) .. "_Section_" .. tostring(title2))
+                local built = require(resolveModule("Section"))(title2, iconKey2, ht.ContainerFrame, favoriteable2, tostring(ht.Name) .. "_Section_" .. tostring(title2))
                 local secObj = {Type = "Section", Container = built.Container, ScrollFrame = ht.ContainerFrame}
                 built.Root.LayoutOrder = _order
                 setmetatable(secObj, elemMeta)
@@ -6222,7 +6224,7 @@ local ClosureBindings = {
             game:GetService "Players".LocalPlayer:GetMouse(),
             game:GetService "Workspace".CurrentCamera,
             script.Parent.Parent
-        local l, Creator, Acrylic, Assets, p = require(k.Packages.Flipper), require(k.Creator), require(k.Acrylic), require(resolveModule("Assets")), script.Parent
+        local l, Creator, Acrylic, Assets, p = require(resolveModule("Flipper")), require(resolveModule("Creator")), require(resolveModule("Acrylic")), require(resolveModule("Assets")), script.Parent
         local springNew, instantNew, CreatorNew = l.Spring.new, l.Instant.new, Creator.New
         return function(t)
             local u, windowState, w, x, y, z =
@@ -7433,8 +7435,8 @@ local ClosureBindings = {
         local maui, script, require, getfenv, setfenv = ImportGlobals(18)
         local h = script.Parent
         local Themes, Flipper, CreatorState =
-            require(h.Themes),
-            require(h.Packages.Flipper),
+            require(resolveModule("Themes")),
+            require(resolveModule("Flipper")),
             {
                 Registry = {},
                 Signals = {},
@@ -7917,7 +7919,7 @@ local ClosureBindings = {
             game:GetService "Players"
         local l, m = Camera.RenderStepped, k.LocalPlayer
         local n, o = m:GetMouse(), script.Parent.Parent
-        local p = require(o.Creator)
+        local p = require(resolveModule("Creator"))
         local New, Components, elementStates = Creator.New, o.Components, {}
         elementStates.__index = elementStates
         elementStates.__type = "Colorpicker"
@@ -7953,7 +7955,7 @@ local ClosureBindings = {
                     Title    = tostring(x.Title),
                     Callback = x.Callback or function() end,
                 }
-                local gA = require(t.Element)(x.Title, x.Description, v.Container, true)
+                local gA = require(resolveModule("Element"))(x.Title, x.Description, v.Container, true)
                 gz.SetTitle = gA.SetTitle
                 gz.SetDesc  = gA.SetDesc
                 gz.Frame    = gA.Frame
@@ -7994,7 +7996,7 @@ local ClosureBindings = {
                     y.Options[w] = nil
                 end
                 local function openGradientDialog()
-                    local gC = require(t.Dialog):Create()
+                    local gC = require(resolveModule("Dialog")):Create()
                     gC.Title.Text = gz.Title
                     gC.Root.Size = UDim2.fromOffset(430, 340)
                     local curH, curS2, curV = Color3.toHSV(gradientKeypoints[activeSlot].color)
@@ -8036,7 +8038,7 @@ local ClosureBindings = {
                         New("UIGradient", { Color = ColorSequence.new(hueKps), Rotation = 90 }),
                         hueSliderInner,
                     })
-                    local hexInput = require(t.Textbox)()
+                    local hexInput = require(resolveModule("Textbox"))()
                     hexInput.Frame.Parent = gC.Root
                     hexInput.Frame.Size = UDim2.new(0, 90, 0, 32)
                     hexInput.Frame.Position = UDim2.fromOffset(240, 55)
@@ -8205,7 +8207,7 @@ local ClosureBindings = {
                 z.Vib = E
             end
             z:SetHSVFromRGB(z.Value)
-            local A = require(t.Element)(x.Title, x.Description, v.Container, true)
+            local A = require(resolveModule("Element"))(x.Title, x.Description, v.Container, true)
             z.SetTitle = A.SetTitle
             z.SetDesc = A.SetDesc
             z.Frame = A.Frame
@@ -8231,7 +8233,7 @@ local ClosureBindings = {
                     {New("UICorner", {CornerRadius = UDim.new(0, 4)}), B}
                 ),
                 function()
-                    local C = require(t.Dialog):Create()
+                    local C = require(resolveModule("Dialog")):Create()
                     C.Title.Text = z.Title
                     C.Root.Size = UDim2.fromOffset(430, 360)
                     local D, E, F, G, H, I =
@@ -8240,7 +8242,7 @@ local ClosureBindings = {
                         z.Vib,
                         z.Transparency,
                         function()
-                            local D = require(t.Textbox)()
+                            local D = require(resolveModule("Textbox"))()
                             D.Frame.Parent = C.Root
                             D.Frame.Size = UDim2.new(0, 90, 0, 32)
                             return D
@@ -8697,8 +8699,8 @@ local ClosureBindings = {
             game:GetService "Players".LocalPlayer:GetMouse(),
             game:GetService "Workspace".CurrentCamera,
             script.Parent.Parent
-        local Creator, d = require(aj.Creator), require(aj.Packages.Flipper)
-        local _acrylicMod = require(aj.Acrylic)
+        local Creator, d = require(resolveModule("Creator")), require(resolveModule("Flipper"))
+        local _acrylicMod = require(resolveModule("Acrylic"))
         local New, Components, elementStates = Creator.New, aj.Components, {}
         local _RS_dd = game:GetService("RunService")
         local function _clearDropShine(state)
@@ -9562,7 +9564,7 @@ local ClosureBindings = {
     [23] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(23)
         local af = script.Parent.Parent
-        local ag = require(af.Creator)
+        local ag = require(resolveModule("Creator"))
         local New, creatorAddSignal, Components, c = Creator.New, Creator.AddSignal, af.Components, {}
         Creator.__index = c
         Creator.__type = "Input"
@@ -9881,7 +9883,7 @@ local ClosureBindings = {
     [25] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(25)
         local af = script.Parent.Parent
-        local Creator, ah, ai, aj = af.Components, require(af.Packages.Flipper), require(af.Creator), {}
+        local Creator, ah, ai, aj = af.Components, require(resolveModule("Flipper")), require(resolveModule("Creator")), {}
         aj.__index = aj
         aj.__type = "Paragraph"
         function aj.New(c, d)
@@ -10364,7 +10366,7 @@ local ClosureBindings = {
                 return 16 / 9
             end
             local ratioNum = parseRatio(ratio)
-            local New = require(af.Creator).New
+            local New = require(resolveModule("Creator")).New
             local wrap = New("Frame", {
                 Size = UDim2.new(1, -16, 0, 150),
                 BackgroundTransparency = 1,
@@ -10425,7 +10427,7 @@ local ClosureBindings = {
             local syncResolved = resolveSync(src)
             local isCustomUrl = syncResolved == "" and type(src) == "string" and src:match("^https?://") ~= nil
             local hasVideo = syncResolved ~= "" or isCustomUrl
-            local New = require(af.Creator).New
+            local New = require(resolveModule("Creator")).New
             local function applyIcon(imgLabel, iconName)
                 local ic = c.Library and c.Library:GetIcon(iconName)
                 if ic and type(ic)=="table" then
@@ -10668,7 +10670,7 @@ local ClosureBindings = {
             local D = (type(e)=="table" and e) or (type(f)=="table" and f) or {}
             local parent = c.Container
             if not parent then return end
-            local New = require(af.Creator).New
+            local New = require(resolveModule("Creator")).New
             local code  = D.Code  or ""
             local title = D.Title or ""
             local cb    = D.OnCopy
@@ -10717,7 +10719,7 @@ local ClosureBindings = {
             local D = (type(e)=="table" and e) or (type(f)=="table" and f) or {}
             local parent = c.Container
             if not parent then return end
-            local New = require(af.Creator).New
+            local New = require(resolveModule("Creator")).New
             local gap  = D.Gap     or 6
             local cols = D.Columns or 2
             local outerWrap = New("Frame",{Size=UDim2.new(1,0,0,0),BackgroundTransparency=1,AutomaticSize=Enum.AutomaticSize.Y,Parent=parent,BorderSizePixel=0})
@@ -10759,7 +10761,7 @@ local ClosureBindings = {
             local D = (type(e)=="table" and e) or (type(f)=="table" and f) or {}
             local parent = c.Container
             if not parent then return end
-            local New = require(af.Creator).New
+            local New = require(resolveModule("Creator")).New
             local h = D.Height or 8
             local sp = New("Frame",{Size=UDim2.new(1,0,0,h),BackgroundTransparency=1,BorderSizePixel=0,Parent=parent})
             local mod = {Frame=sp, Type="Space"}
@@ -10777,7 +10779,7 @@ local ClosureBindings = {
         function c.New(d, e, f)
             local parent = c.Container
             if not parent then return end
-            local New = require(af.Creator).New
+            local New = require(resolveModule("Creator")).New
             local wrapper = New("Frame", {
                 Size = UDim2.new(1, 0, 0, 12),
                 BackgroundTransparency = 1,
@@ -10814,7 +10816,7 @@ local ClosureBindings = {
             local vol    = (opts.Volume ~= nil) and math.clamp(opts.Volume, 0, 10) or 0.5
             local looped = opts.Looped ~= false
             local auto   = opts.AutoPlay ~= false
-            local New = require(af.Creator).New
+            local New = require(resolveModule("Creator")).New
             local lib = c.Library
             local function resolve(s, noDownload)
                 local mm = lib and lib.MediaManager
@@ -11223,12 +11225,12 @@ local ClosureBindings = {
     [30] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(30)
         local af = {
-            SingleMotor = require(script.SingleMotor),
-            GroupMotor = require(script.GroupMotor),
-            Instant = require(script.Instant),
-            Linear = require(script.Linear),
-            Spring = require(script.Spring),
-            isMotor = require(script.isMotor)
+            SingleMotor = require(resolveModule("SingleMotor")),
+            GroupMotor = require(resolveModule("GroupMotor")),
+            Instant = require(resolveModule("Instant")),
+            Linear = require(resolveModule("Linear")),
+            Spring = require(resolveModule("Spring")),
+            isMotor = require(resolveModule("isMotor"))
         }
         return af
     end,
@@ -13446,6 +13448,7 @@ local ClosureBindings = {
 
 }
 
+
 do
     local taskLib    = task
     local setmetatable = setmetatable
@@ -13483,7 +13486,6 @@ do
     end
     local venvVersion = '0.0.0-venv'
 
-    local scriptMap   = {}
     local closureMap  = {}
     local returnMap   = {}
     local scriptQueue = {}
@@ -13619,7 +13621,7 @@ do
         end
     end
 
-    local function resolveModule(name)
+    resolveModule = function(name)
         for id, inst in next, scriptMap do
             if type(id) == 'number' then
                 local ok, n = pcall(function() return inst.Name end)
