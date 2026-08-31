@@ -7431,7 +7431,7 @@ local ClosureBindings = {
     [18] = function()
         local maui, script, require, getfenv, setfenv = ImportGlobals(18)
         local h = script.Parent
-        local i, Creator, k =
+        local Themes, Flipper, CreatorState =
             require(h.Themes),
             require(h.Packages.Flipper),
             {
@@ -7497,20 +7497,20 @@ local ClosureBindings = {
             }
         local l = function(l, m)
             if m.ThemeTag then
-                Acrylic.AddThemeObject(l, m.ThemeTag)
+                CreatorState.AddThemeObject(l, m.ThemeTag)
             end
         end
-        function k.AddSignal(m, n)
-            table.insert(Acrylic.Signals, m:Connect(n))
+        function CreatorState.AddSignal(m, n)
+            table.insert(CreatorState.Signals, m:Connect(n))
         end
-        function k.Disconnect()
-            for m = #Acrylic.Signals, 1, -1 do
-                local n = table.remove(Acrylic.Signals, m)
+        function CreatorState.Disconnect()
+            for m = #CreatorState.Signals, 1, -1 do
+                local n = table.remove(CreatorState.Signals, m)
                 n:Disconnect()
             end
         end
         local _noInheritFallbackKeys = {ShineEnabled = true, StrokeShine = true}
-        function k.GetThemeProperty(m)
+        function CreatorState.GetThemeProperty(m)
             local t = i[require(h).Theme]
             if t and t[m] ~= nil then
                 return t[m]
@@ -7623,8 +7623,8 @@ local ClosureBindings = {
                     if inst.Parent then
                         pcall(function() conn:Disconnect() end)
                         csPendingConns[pendingKey] = nil
-                        local currentVal = Acrylic.GetThemeProperty(
-                            Acrylic.Registry[inst] and Acrylic.Registry[inst].Properties[prop] or ""
+                        local currentVal = CreatorState.GetThemeProperty(
+                            CreatorState.Registry[inst] and CreatorState.Registry[inst].Properties[prop] or ""
                         )
                         local seqToUse = (typeof(currentVal) == "ColorSequence") and currentVal or colorSeq
                         startCs(inst, prop, seqToUse, opts)
@@ -7634,18 +7634,18 @@ local ClosureBindings = {
             end
         end
 
-        function k.UpdateTheme()
-            for m, n in next, Acrylic.Registry do
+        function CreatorState.UpdateTheme()
+            for m, n in next, CreatorState.Registry do
                 if m and m.Parent then
                     for o, _ in next, n.Properties do
                         stopCs(m, o)
                     end
                 end
             end
-            for m, n in next, Acrylic.Registry do
+            for m, n in next, CreatorState.Registry do
                 if m and m.Parent then
                     for o, p in next, n.Properties do
-                        local val = Acrylic.GetThemeProperty(p)
+                        local val = CreatorState.GetThemeProperty(p)
                         if typeof(val) == "ColorSequence" then
                             startCs(m, o, val)
                         elseif val ~= nil then
@@ -7653,11 +7653,11 @@ local ClosureBindings = {
                         end
                     end
                 else
-                    Acrylic.Registry[m] = nil
+                    CreatorState.Registry[m] = nil
                 end
             end
-            for o, p in next, Acrylic.TransparencyMotors do
-                p:setGoal(Creator.Instant.new(Acrylic.GetThemeProperty "ElementTransparency"))
+            for o, p in next, CreatorState.TransparencyMotors do
+                p:setGoal(Flipper.Instant.new(CreatorState.GetThemeProperty "ElementTransparency"))
             end
             local thm = i[require(h).Theme]
             local x = Acrylic.Library
@@ -7788,7 +7788,7 @@ local ClosureBindings = {
         end
         local function _applyThemeToObject(inst, props)
             for prop, key in next, props do
-                local val = Acrylic.GetThemeProperty(key)
+                local val = CreatorState.GetThemeProperty(key)
                 if typeof(val) == "ColorSequence" then
                     startCs(inst, prop, val)
                 elseif val ~= nil then
@@ -7797,23 +7797,23 @@ local ClosureBindings = {
                 end
             end
         end
-        function k.AddThemeObject(m, n)
-            Acrylic.Registry[m] = {Object = m, Properties = n}
+        function CreatorState.AddThemeObject(m, n)
+            CreatorState.Registry[m] = {Object = m, Properties = n}
             _applyThemeToObject(m, n)
             return m
         end
-        function k.OverrideTag(m, n)
-            if Acrylic.Registry[m] then
-                Acrylic.Registry[m].Properties = n
+        function CreatorState.OverrideTag(m, n)
+            if CreatorState.Registry[m] then
+                CreatorState.Registry[m].Properties = n
             else
-                Acrylic.Registry[m] = {Object = m, Properties = n}
+                CreatorState.Registry[m] = {Object = m, Properties = n}
             end
             _applyThemeToObject(m, n)
         end
 
-        function k.New(m, n, o)
+        function CreatorState.New(m, n, o)
             local p = Instance.new(m)
-            for q, r in next, Acrylic.DefaultProperties[m] or {} do
+            for q, r in next, CreatorState.DefaultProperties[m] or {} do
                 p[q] = r
             end
             for s, t in next, n or {} do
@@ -7827,17 +7827,17 @@ local ClosureBindings = {
             l(p, n)
             return p
         end
-        function k.SpringMotor(m, n, o, p, s)
+        function CreatorState.SpringMotor(m, n, o, p, s)
             p = p or false
             s = s or false
-            local t = Creator.SingleMotor.new(m)
+            local t = Flipper.SingleMotor.new(m)
             t:onStep(
                 function(u)
                     n[o] = u
                 end
             )
             if s then
-                table.insert(Acrylic.TransparencyMotors, t)
+                table.insert(CreatorState.TransparencyMotors, t)
             end
             local u = function(u, v)
                 v = v or false
@@ -7848,7 +7848,7 @@ local ClosureBindings = {
                         end
                     end
                 end
-                t:setGoal(Creator.Spring.new(u, {frequency = 8}))
+                t:setGoal(Flipper.Spring.new(u, {frequency = 8}))
             end
             return t, u
         end
